@@ -1,7 +1,6 @@
 # Dependencies
-Pytorch
-
-Sklearn
+- Pytorch
+- Sklearn
 
 # 1-layer Convolution + 1 layer FC Model
 
