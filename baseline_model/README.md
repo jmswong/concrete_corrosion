@@ -1,3 +1,7 @@
+# Dependencies
+Pytorch
+Sklearn
+
 # 1-layer Convolution + 1 layer FC Model
 
 This trains a model to predict concrete cracking based on corrosion depths measured on a concrete rebar, along with 4 continuous features representing properties of the concrete (rebar, cover, tensile_strength, and water_content). Corrosion is measured along the horizontal axis of the rebar, and is averaged along the circumference of the cross section, resulting in a 1d vector of floating point values.
