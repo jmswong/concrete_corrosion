@@ -14,9 +14,11 @@ The following is a graphical representation of this model:
 
 ![convolution_fc_diagram](convolution_fc_diagram.png)
 
-## Usage
+## Example Usage
 ```
 python3 train.py --corrosion_path=/path/to/corrosion.npy \
 --label_path=/path/to/target_labels.npy --batch_size=512 --num_epochs=10000 \
 --output_path=/path/to/model.pt
 ```
+
+Corrosion_path and label_path are the output files from running concrete_corrosion/data_preprocessing/preprocess_data.py. Training and validation loss are reported every 10 epochs
