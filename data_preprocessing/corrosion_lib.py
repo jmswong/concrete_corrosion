@@ -85,10 +85,6 @@ def get_all_filenames_from_zip(path):
     return get_corrosion_filenames_subset(simulation_timesteps)
 
 
-# Returns a list of corrosion simulation filenames, for the first num_simulation
-# datapoints. Note that the files are 1-indexed, so this returns filenames from
-
-
 # Returns a 1d corrosion map given a single filepath. A 1d corrosion map is
 # represented as a python dictionary, with keys representing the location on the
 # x-axis along a horizontal rebar, and the values representing corrosion depth
