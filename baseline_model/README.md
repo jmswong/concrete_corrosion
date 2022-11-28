@@ -1,3 +1,7 @@
+# Dependencies
+- Pytorch
+- Sklearn
+
 # 1-layer Convolution + 1 layer FC Model
 
 This trains a model to predict concrete cracking based on corrosion depths measured on a concrete rebar, along with 4 continuous features representing properties of the concrete (rebar, cover, tensile_strength, and water_content). Corrosion is measured along the horizontal axis of the rebar, and is averaged along the circumference of the cross section, resulting in a 1d vector of floating point values.
@@ -10,9 +14,11 @@ The following is a graphical representation of this model:
 
 ![convolution_fc_diagram](convolution_fc_diagram.png)
 
-## Usage
+## Example Usage
 ```
 python3 train.py --corrosion_path=/path/to/corrosion.npy \
 --label_path=/path/to/target_labels.npy --batch_size=512 --num_epochs=10000 \
 --output_path=/path/to/model.pt
 ```
+
+Corrosion_path and label_path are the output files from running concrete_corrosion/data_preprocessing/preprocess_data.py. Training and validation loss are reported every 10 epochs
