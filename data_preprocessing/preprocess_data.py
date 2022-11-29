@@ -71,12 +71,12 @@ def join_corrosion_and_outputs(corrosion_maps, output_maps):
 def preprocess():
     # Extract the first num_simulations experiments to output_path.
     if (args.extract):
+        simulation_timesteps = output_lib.extract_FEM_output(
+            args.output_path + '/' + args.output_zipped_filename,
+            args.num_simulations, extract_all=True)
         corrosion_lib.extract_corrosion_output(
             args.output_path + '/' + args.corrosion_zipped_filename,
-            args.num_simulations)
-        output_lib.extract_FEM_output(
-            args.output_path + '/' + args.output_zipped_filename,
-            args.num_simulations)
+            args.num_simulations, simulation_timesteps = simulation_timesteps)
 
     corrosion_maps = corrosion_lib.extract_1d_corrosion_maps(
         args.output_path, args.num_simulations)

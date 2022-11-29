@@ -18,25 +18,84 @@ def get_FEM_filenames(num_simulations=1):
     return filenames
 
 
-# Unzip specified number of FEM output files into the same directory. Each
-# simulation will have NUM_TIMESTEPS_PER_SIMULATION output files.
-def extract_FEM_output(zipped_path, num_simulations=1):
-    FEM_filenames = get_FEM_filenames(num_simulations)
+# Returns a list of FEM filenames for the specified (simulation_idx, timestep) pairs.
+def get_FEM_filenames_from_list(simulation_timesteps):
+    filenames = []
+    for simulation_idx, timestep in simulation_timesteps:
+        filename = "output_%d_%d.mat" % (simulation_idx, timestep)
+        filenames.append(filename)
+    return filenames
+
+
+# Returns a list of (simulation_idx, timestep) pairs for all FEM outputs in the given zip file.
+def get_all_simulation_timesteps_from_zip(path):
+    output = []
+    with zipfile.ZipFile(path, 'r') as zip_obj:
+        file_names = zip_obj.namelist()
+        for file_name in file_names:
+            if "MACOSX" in file_name:
+                continue
+            if file_name[-1] == '/':
+                continue
+            file_name = file_name.split('/')[-1]
+            matches = re.match(r'output_(\d+)_(\d+).mat', file_name)
+            simulation_idx = int(matches.group(1))
+            timestep = int(matches.group(2))
+            output.append((simulation_idx, timestep))
+    # returns list sorted first by increasing simulation_idx, then by increasing timestep
+    return sorted(output)
+
+
+def extract_FEM_output(zipped_path, num_simulations=1, extract_all=False):
+    '''
+    Unzip specified number of FEM output files into the same directory. Each
+    simulation will have NUM_TIMESTEPS_PER_SIMULATION output files. If
+    extract_all is true, ignore num_simulations and extract every file in the
+    specified path.
+
+    Args:
+        zipped_path (str): Path to zipped output data.
+        num_simulations (int): If set, extract all timesteps for the first
+            num_simulation experiments.
+        extract_all (bool): If true, extract all files in zipped_path.
+
+    Returns:
+        list: List of (simulation_index, timesteps) that were successfully extracted.
+    '''
+    if extract_all:
+        simulation_timesteps = get_all_simulation_timesteps_from_zip(
+            zipped_path)
+        FEM_filenames = get_FEM_filenames_from_list(simulation_timesteps)
+    else:
+        FEM_filenames = get_FEM_filenames(num_simulations)
 
     FEM_path_lst = zipped_path.split('/')
     FEM_dir, zip_filename = '/'.join(FEM_path_lst[:-1]), FEM_path_lst[-1]
 
+    output = []
     with zipfile.ZipFile(zipped_path, 'r') as zip_obj:
         file_names = zip_obj.namelist()
         for file_name in file_names:
             if "MACOSX" in file_name:
                 continue
+
             file_name = file_name.split('/')[-1]
             if file_name not in FEM_filenames:
                 continue
+
             full_file_name = zip_filename.split(".")[0] + "/" + file_name
             print("extracting " + full_file_name + " to " + FEM_dir)
             zip_obj.extract(full_file_name, FEM_dir)
+
+            # parse for simulation_idx and timestep
+            matches = re.match(r'output_(\d+)_(\d+).mat', file_name)
+            simulation_idx = int(matches.group(1))
+            timestep = int(matches.group(2))
+
+            output.append((simulation_idx, timestep))
+
+    # returns list sorted first by increasing simulation_idx, then by increasing timestep
+    return sorted(output)
 
 
 # Extract concrete properties and surface cracking target label from specified

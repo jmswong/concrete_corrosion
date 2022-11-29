@@ -6,14 +6,22 @@ import zipfile
 NUM_TIMESTEPS_PER_SIMULATION = 9
 
 
-# Unzip specified number of corrosion files into the same directory,
-# ignoring any edge files. If extract_all is true, ignore num_simulations
-# and extract every file in the specified path.
-def extract_corrosion_output(path, num_simulations=1, extract_all=False):
-    import pdb
-    pdb.set_trace()
-    if extract_all:
-        corrosion_filenames = get_all_filenames_from_zip(path)
+def extract_corrosion_output(path,
+                             num_simulations=1,
+                             simulation_timesteps=None):
+    '''
+    Unzip specified corrosion files into the same directory.
+
+    Args:
+        path (str): Path to zipped corrosion data.
+        num_simulations (int): If set, extract all timesteps for the first
+            num_simulation experiments.
+        simulation_timesteps: List of (simulation index, timestep) pairs. If
+            this is specified, ignore num_simulations and extract all corrosion
+            files specified by the list.
+    '''
+    if simulation_timesteps is not None:
+        corrosion_filenames = get_all_filenames_from_list(simulation_timesteps)
     else:
         corrosion_filenames = get_corrosion_filenames(num_simulations)
 
@@ -31,6 +39,26 @@ def extract_corrosion_output(path, num_simulations=1, extract_all=False):
                 ".")[0] + "/" + file_name
             print("extracting " + full_file_name + " to " + corrosion_dir)
             zip_obj.extract(full_file_name, corrosion_dir)
+
+
+def get_all_filenames_from_list(simulation_timesteps):
+    '''
+    Constructs list of filenames given a list of simulation and timestep pars.
+
+    Args:
+        simulation_timesteps: List of (simulation index, timestep) pairs. If
+            this is specified, ignore num_simulations and extract all corrosion
+            files specified by the list.
+
+    Returns:
+        list (str): List of filenames for corrosion input files.
+    '''
+    filenames = []
+    for simulation_idx, timestep in simulation_timesteps:
+        filename = "Corrosion_simulation_%d_timeStep_%d.txt" % (simulation_idx,
+                                                                timestep)
+        filenames.append(filename)
+    return filenames
 
 
 # Returns a list of corrosion simulation filenames, for the first num_simulation
@@ -59,9 +87,17 @@ def get_corrosion_filenames_subset(simulation_timesteps):
     return filenames
 
 
-# Returns a list of corrosion simulation filenames which match any output file
-# from the given corrosion.zip path.
 def get_all_filenames_from_zip(path):
+    '''
+    Returns a list of corrosion simulation filenames which match any file
+    from the given corrosion.zip path.
+    
+    Args:
+        path (str): Path to zipped corrosion data.
+
+    Returns:
+        list: of tuples (simulation_index, timestep)
+    '''
     filenames = []
     with zipfile.ZipFile(path, 'r') as zip_obj:
         filenames = zip_obj.namelist()
