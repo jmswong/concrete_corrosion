@@ -121,11 +121,19 @@ def get_all_filenames_from_zip(path):
     return get_corrosion_filenames_subset(simulation_timesteps)
 
 
-# Returns a 1d corrosion map given a single filepath. A 1d corrosion map is
-# represented as a python dictionary, with keys representing the location on the
-# x-axis along a horizontal rebar, and the values representing corrosion depth
-# at that point.
 def extract_1d_corrosion_map_from_filepath(filepath):
+    '''
+    Returns a 1d corrosion map given a single filepath. A 1d corrosion map is
+    represented as a python dictionary, with keys representing the location on the
+    x-axis along a horizontal rebar, and the values representing corrosion depth
+    at that point.
+
+    Args:
+        filepath (str): Path to single corrosion file.
+
+    Returns:
+        dict: Mapping from rebar location to corrosion depth.
+    '''
     with open(filepath, 'r') as f:
         lines = f.readlines()
     corrosion = {}
@@ -140,11 +148,26 @@ def extract_1d_corrosion_map_from_filepath(filepath):
     return corrosion
 
 
-# Returns a list of pairs, each containing the filename of the simulation, and
-# a 1-d corrosion map.
 def extract_1d_corrosion_maps(output_dir,
                               num_simulations=1,
                               simulation_timesteps=None):
+    '''
+    Returns a list of pairs, each containing the filename of the
+    simulation, and a 1-d corrosion map.
+
+    Args:
+        output_dir (str): Path to unzipped corrosion data.
+        num_simulations (int): If set, extract all timesteps for the first
+            num_simulation experiments.
+        simulation_timesteps: List of (simulation index, timestep) pairs. If
+            this is specified, ignore num_simulations and extract all corrosion
+            files specified by the list.
+        
+    Returns:
+        list (tuple): List of (filename, corrosion_map), where corrosion_map
+            is a dictionary mapping from points on the x-axis of a horizontal
+            to corrosion depths.
+    '''
     corrosion_dir = output_dir + "/corrosion"
 
     if simulation_timesteps is not None:
@@ -170,9 +193,22 @@ def verify_rebar_locations(file_and_corrosion_map):
     return all(x == rebar_locations[0] for x in rebar_locations)
 
 
-# The corrosion depth data generated from COMSOL are on different scales. This
-# rescales them based on a hard-coded scaling factor.
 def remap_output_scales(file_and_corrosion_maps, output_maps):
+    '''
+    The corrosion depth data generated from COMSOL are on different scales. This
+    rescales them based on a hard-coded scaling factor.
+
+    Args:
+        file_and_corrosion_maps (list): List of (filename, corrosion_map) tuples.
+            corrosion_map is a dictionary mapping from points on the x-axis of a
+            horizontal rebar to corrosion depths.
+
+        output_maps (list): List of (filename, output_map) tuples. output_map is
+            a dictionary containing various properties of the output data.
+
+    Returns:
+        list: New list of corrosion_map, scaled accordingly.   
+    '''
     output = []
     for file_path, corrosion_map in file_and_corrosion_maps:
         file_name = file_path.split("/")[-1]
@@ -188,7 +224,7 @@ def remap_output_scales(file_and_corrosion_maps, output_maps):
         elif simulation_idx == 23 and timestep <= 4:
             scaling_factor = (10**5) / 5
         else:
-            # For certain simulations, the corrosion depths are stored in the output
+            # For other simulations, the corrosion depths are stored in the output
             # file.
             replacement_corrosion_map = {}
             output_filename = "output_%d_%d.mat" % (simulation_idx, timestep)
@@ -201,7 +237,7 @@ def remap_output_scales(file_and_corrosion_maps, output_maps):
                     for i in range(len(corrosion_map_points)):
                         replacement_corrosion_map[
                             corrosion_map_points[i]] = float(
-                                corrosion_depths_from_output[i])
+                                corrosion_depths_from_output[i][0])
             assert replacement_corrosion_map, "Failed to find matching output for corrosion file %s" % file_path
             print("Replacing corrosion map from %s with %s" %
                   (file_path, output_path))

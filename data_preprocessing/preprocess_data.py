@@ -76,14 +76,16 @@ def preprocess():
             args.num_simulations, extract_all=True)
         corrosion_lib.extract_corrosion_output(
             args.output_path + '/' + args.corrosion_zipped_filename,
-            args.num_simulations, simulation_timesteps = simulation_timesteps)
+            args.num_simulations, simulation_timesteps=simulation_timesteps)
 
     corrosion_maps = corrosion_lib.extract_1d_corrosion_maps(
-        args.output_path, args.num_simulations)
+        args.output_path, args.num_simulations, simulation_timesteps=simulation_timesteps)
     output_maps = output_lib.extract_concrete_outputs(args.output_path,
-                                                      args.num_simulations)
+                                                      args.num_simulations,
+                                                      simulation_timesteps=simulation_timesteps)
 
-    # Rescale corrosion depths to all be on the same scale. Also replace any corrosion depths from outputs.
+    # Rescale corrosion depths to all be on the same scale. Also replace any
+    # corrosion depths from outputs.
     corrosion_maps = corrosion_lib.remap_output_scales(corrosion_maps,
                                                        output_maps)
 

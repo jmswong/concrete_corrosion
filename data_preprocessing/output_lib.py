@@ -18,8 +18,19 @@ def get_FEM_filenames(num_simulations=1):
     return filenames
 
 
-# Returns a list of FEM filenames for the specified (simulation_idx, timestep) pairs.
 def get_FEM_filenames_from_list(simulation_timesteps):
+    '''
+    Returns a list of FEM filenames for the specified (simulation_idx, timestep) pairs.
+
+    Args:
+        simulation_timesteps: List of (simulation index, timestep) pairs. If
+            this is specified, ignore num_simulations and extract all corrosion
+            files specified by the list.
+
+    Returns:
+        list (str): List of output filenames containing output labels.
+
+    '''
     filenames = []
     for simulation_idx, timestep in simulation_timesteps:
         filename = "output_%d_%d.mat" % (simulation_idx, timestep)
@@ -123,13 +134,29 @@ def extract_concrete_outputs_from_filepath(filepath):
     }
 
 
-# Extract num_simulation number of output files. Returns a list of pairs, each
-# containing the output filename and the concrete output dictionary.
-def extract_concrete_outputs(path, num_simulations=1):
-    FEM_filenames = get_FEM_filenames(num_simulations)
+def extract_concrete_outputs(path, num_simulations=1, simulation_timesteps=None):
+    '''
+    Extract concrete output files. Returns a list of pairs, each
+    containing the output filename and the concrete output dictionary.
+
+    Args:
+        path (str): Path to zipped output data.
+        num_simulations (int): If set, extract all timesteps for the first
+            num_simulation experiments.
+        simulation_timesteps: List of (simulation index, timestep) pairs. If
+            this is specified, ignore num_simulations and extract all corrosion
+            files specified by the list.
+
+    Returns:
+        list (tuple): List of (filename, concrete output) pairs.
+    '''
+    if simulation_timesteps is not None:
+        FEM_filenames = get_FEM_filenames_from_list(simulation_timesteps)
+    else:
+        FEM_filenames = get_FEM_filenames(num_simulations)
 
     file_and_outputs = []
-    for filename in get_FEM_filenames(num_simulations):
+    for filename in FEM_filenames:
         filepath = path + '/Data_outputs/' + filename
         if not os.path.isfile(filepath):
             print("skipping %s since output file does not exist!" % filepath)
