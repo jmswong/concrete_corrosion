@@ -68,21 +68,33 @@ def join_corrosion_and_outputs(corrosion_maps, output_maps):
     return np.array(corrosion_output), np.array(target_output)
 
 
+def shuffle_numpy_pair(a, b):
+    assert len(a) == len(b)
+    np.random.seed(42)
+    p = np.random.permutation(len(a))
+    return a[p], b[p]
+
+
 def preprocess():
     # Extract the first num_simulations experiments to output_path.
     if (args.extract):
         simulation_timesteps = output_lib.extract_FEM_output(
             args.output_path + '/' + args.output_zipped_filename,
-            args.num_simulations, extract_all=True)
+            args.num_simulations,
+            extract_all=True)
         corrosion_lib.extract_corrosion_output(
             args.output_path + '/' + args.corrosion_zipped_filename,
-            args.num_simulations, simulation_timesteps=simulation_timesteps)
+            args.num_simulations,
+            simulation_timesteps=simulation_timesteps)
 
     corrosion_maps = corrosion_lib.extract_1d_corrosion_maps(
-        args.output_path, args.num_simulations, simulation_timesteps=simulation_timesteps)
-    output_maps = output_lib.extract_concrete_outputs(args.output_path,
-                                                      args.num_simulations,
-                                                      simulation_timesteps=simulation_timesteps)
+        args.output_path,
+        args.num_simulations,
+        simulation_timesteps=simulation_timesteps)
+    output_maps = output_lib.extract_concrete_outputs(
+        args.output_path,
+        args.num_simulations,
+        simulation_timesteps=simulation_timesteps)
 
     # Rescale corrosion depths to all be on the same scale. Also replace any
     # corrosion depths from outputs.
@@ -93,16 +105,33 @@ def preprocess():
     assert corrosion_lib.verify_rebar_locations(corrosion_maps)
 
     # join corrosion and output data
-    corrosion_array, target_array = join_corrosion_and_outputs(
+    corrosion_array, labels_array = join_corrosion_and_outputs(
         corrosion_maps, output_maps)
     print("corrosion_array shape: ", corrosion_array.shape)
-    print("target_array shape: ", target_array.shape)
+    print("labels_array shape: ", labels_array.shape)
+
+    # shuffle and split to 80%/20% train/test sets
+    corrosion_array, labels_array = shuffle_numpy_pair(corrosion_array,
+                                                       labels_array)
+    index_80 = int(corrosion_array.shape[0] * 0.8)
+    corrosion_train = corrosion_array[index_80:]
+    corrosion_test = corrosion_array[:index_80]
+    labels_train = labels_array[index_80:]
+    labels_test = labels_array[:index_80]
+    print("corrosion_train shape: ", corrosion_train.shape)
+    print("labels_train shape: ", labels_train.shape)
+    print("corrosion_test shape: ", corrosion_test.shape)
+    print("labels_test shape: ", labels_test.shape)
 
     # save ndarray to file
-    with open(args.output_path + "/corrosion.npy", "wb") as f:
-        np.save(f, corrosion_array)
-    with open(args.output_path + "/target_labels.npy", "wb") as f:
-        np.save(f, target_array)
+    with open(args.output_path + "/corrosion_train.npy", "wb") as f:
+        np.save(f, corrosion_train)
+    with open(args.output_path + "/labels_train.npy", "wb") as f:
+        np.save(f, labels_train)
+    with open(args.output_path + "/corrosion_test.npy", "wb") as f:
+        np.save(f, corrosion_test)
+    with open(args.output_path + "/labels_test.npy", "wb") as f:
+        np.save(f, labels_test)
 
 
 if __name__ == "__main__":
