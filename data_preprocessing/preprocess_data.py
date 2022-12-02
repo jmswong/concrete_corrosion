@@ -25,6 +25,17 @@ args = parser.parse_args()
 
 
 def join_corrosion_and_outputs(corrosion_maps, output_maps):
+    '''
+	Merges input features from corrosion_maps (corrosion depths) with input features (concrete properties) and target labels from output_maps.
+    
+	Args:
+        corrosion_maps (list): List of dicts mapping from points on the x-axis of a horizontal rebar to corrosion depths.
+        output_maps (list): List of dicts containing various properties of the output data.
+
+    Returns:
+        corrosion output (numpy array): Array of shape (num_samples, 343). Each row contains: simulation_idx, timestep, 4 concrete property featurs, and 337 corrosion depth features.
+		labels output (numpy array): Boolean array of shape (num samples), indicating surface cracking.
+    '''
     corrosion_output = []
     target_output = []
     for file_path, corrosion_map in corrosion_maps:
@@ -82,7 +93,9 @@ def shuffle_numpy_pair(a, b):
 
 
 def preprocess():
-    # Extract the first num_simulations experiments to output_path.
+    '''
+    Extract, process, and join the corrosion, concrete properties, and COMSOL outputs.
+    '''
     if (args.extract):
         simulation_timesteps = output_lib.extract_FEM_output(
             args.output_path + '/' + args.output_zipped_filename,
