@@ -32,6 +32,12 @@ def join_corrosion_and_outputs(corrosion_maps, output_maps):
         m = re.search("Corrosion_simulation_(\d+)_timeStep_(\d+).txt",
                       file_name)
         simulation_idx, timestep = int(m.group(1)), int(m.group(2))
+
+        # We are missing correct corrosion data for the first 25 simulations. For now, we just remove these examples.
+        # TODO: fix the bug and remove this
+        if simulation_idx <= 25:
+            continue
+
         output_filename = "output_%d_%d.mat" % (simulation_idx, timestep)
 
         # find the corresponding output map
