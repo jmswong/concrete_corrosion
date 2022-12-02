@@ -215,6 +215,7 @@ def remap_output_scales(file_and_corrosion_maps, output_maps):
         m = re.search("Corrosion_simulation_(\d+)_timeStep_(\d+).txt",
                       file_name)
         simulation_idx, timestep = int(m.group(1)), int(m.group(2))
+        scaling_factor = None
         if 1 <= simulation_idx <= 5:
             scaling_factor = (10**6) / 5
         elif 6 <= simulation_idx <= 15:
@@ -243,9 +244,11 @@ def remap_output_scales(file_and_corrosion_maps, output_maps):
                   (file_path, output_path))
             output.append((file_path, replacement_corrosion_map))
 
-        scaled_corrosion_map = {
-            k: v * scaling_factor
-            for k, v in corrosion_map.items()
-        }
-        output.append((file_path, scaled_corrosion_map))
+        if scaling_factor is not None:
+            scaled_corrosion_map = {
+                k: v * scaling_factor
+                for k, v in corrosion_map.items()
+            }
+            output.append((file_path, scaled_corrosion_map))
+
     return output
