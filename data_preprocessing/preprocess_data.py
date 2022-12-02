@@ -114,10 +114,10 @@ def preprocess():
     corrosion_array, labels_array = shuffle_numpy_pair(corrosion_array,
                                                        labels_array)
     index_80 = int(corrosion_array.shape[0] * 0.8)
-    corrosion_train = corrosion_array[index_80:]
-    corrosion_test = corrosion_array[:index_80]
-    labels_train = labels_array[index_80:]
-    labels_test = labels_array[:index_80]
+    corrosion_train = corrosion_array[:index_80]
+    corrosion_test = corrosion_array[index_80:]
+    labels_train = labels_array[:index_80]
+    labels_test = labels_array[index_80:]
     print("corrosion_train shape: ", corrosion_train.shape)
     print("labels_train shape: ", labels_train.shape)
     print("corrosion_test shape: ", corrosion_test.shape)
