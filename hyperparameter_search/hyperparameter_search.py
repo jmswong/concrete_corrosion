@@ -138,6 +138,10 @@ def train_and_validate(config):
             model=model,
             data_loader=val_dataloader,
             positive_samples_weight=config["pos_weight"])
+		
+        with tune.checkpoint_dir(epoch) as checkpoint_dir:
+            path = os.path.join(checkpoint_dir, 'checkpoint')
+            torch.save((model.state_dict(), torch_optimizer.state_dict()), path)
 
         tune.report(loss=val_loss,
                     precision=val_precision,
