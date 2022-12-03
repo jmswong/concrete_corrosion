@@ -16,9 +16,7 @@ The following is a graphical representation of this model:
 
 ## Example Usage
 ```
-python3 train.py --corrosion_path=/path/to/corrosion.npy \
---label_path=/path/to/target_labels.npy --batch_size=512 --num_epochs=10000 \
---output_path=/path/to/model.pt
+python3 baseline.py --batch_size=128 --num_epochs=10000 --corrosion_path=/path/to/corrosion.npy --label_path=/path/to/target_labels.npy --output_path=/path/to/model.pt --print_every=10
 ```
 
-Corrosion_path and label_path are the output files from running concrete_corrosion/data_preprocessing/preprocess_data.py. Training and validation loss are reported every 10 epochs
+Corrosion_path and label_path are the output files from running `concrete_corrosion/data_preprocessing/preprocess_data.py`. Training and validation loss are reported every `print_every` epochs.
