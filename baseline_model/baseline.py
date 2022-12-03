@@ -167,6 +167,21 @@ def compute_weighted_loss(pred, y, loss_fn, pos_weight=1):
 
 
 def validate(model, data_loader, positive_samples_weight=1):
+    '''
+    Validates a given model on a dataset.
+
+    Args:
+        model: Torch model.
+        data_loader: DataLoader with validation data.
+        positive_samples_weight: Weight applied to positive samples.
+
+    Returns: Evaluation metrics averaged over all batches in validation.
+        avg_loss (float)
+        avg_precision (float)
+        avg_recall (float)
+        avg_f1 (float)
+        avg_roc_auc (float)
+    '''
     model.eval()
 
     loss_fn = nn.BCELoss(reduction='none')
@@ -212,6 +227,22 @@ def validate(model, data_loader, positive_samples_weight=1):
 
 
 def train_epoch(model, data_loader, optimizer, positive_samples_weight=1):
+    '''
+    Trains a single epoch over the training data.
+
+    Args:
+        model: Torch model to train.
+        data_loader: DataLoader with input training data.
+        optimizer: Torch otpimizer. Should be one of {"Adam", "RMSprop", "SGD"}.
+        positive_samples_weight: Weight applied to positive samples.
+
+    Returns: Evaluation metrics averaged over all batches of training.
+        avg_loss (float)
+        avg_precision (float)
+        avg_recall (float)
+        avg_f1 (float)
+        avg_roc_auc (float)
+    '''
     model.train()
 
     loss_fn = nn.BCELoss(reduction='none')
@@ -262,7 +293,10 @@ def train_epoch(model, data_loader, optimizer, positive_samples_weight=1):
     return avg_loss, avg_precision, avg_recall, avg_f1, avg_roc_auc
 
 
-if __name__ == '__main__':
+def main():
+    '''
+    Load training data, train model, save model outuputs.
+    '''
     # Load dataset from saved npy
     corrosion_data = np.load(args.corrosion_path, allow_pickle=True)
     target_data = np.load(args.label_path, allow_pickle=False)
@@ -320,11 +354,14 @@ if __name__ == '__main__':
             positive_samples_weight=positive_samples_weight)
 
         if args.print_every is not None and epoch % args.print_every == 0:
-            print(
-                "Epoch %4d- train_loss:%.3f val_loss:%.3f train_f1:%.3f "
-                "val_f1:%.3f train_roc_auc:%.3f val_roc_auc:%.3f"
-                % (epoch, train_loss, val_loss, train_f1, val_f1,
+            print("Epoch %4d- train_loss:%.3f val_loss:%.3f train_f1:%.3f "
+                  "val_f1:%.3f train_roc_auc:%.3f val_roc_auc:%.3f" %
+                  (epoch, train_loss, val_loss, train_f1, val_f1,
                    train_roc_auc, val_roc_auc))
 
     # Save trained model
     torch.save(model.state_dict(), args.output_path)
+
+
+if __name__ == '__main__':
+    main()
