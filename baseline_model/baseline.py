@@ -21,11 +21,12 @@ from sklearn.model_selection import train_test_split
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '--corrosion_path',
-    default='/home/wongjames/cs230/Project/data_11_09_2022/corrosion.npy',
+    default=
+    '/home/wongjames/cs230/Project/data_12_2_2022/corrosion_train_normalized.npy',
     help="Path of saved corrosion numpy array")
 parser.add_argument(
     '--label_path',
-    default='/home/wongjames/cs230/Project/data_11_09_2022/target_labels.npy',
+    default='/home/wongjames/cs230/Project/data_12_2_2022/labels_train.npy',
     help="Path of saved target label numpy array")
 parser.add_argument(
     '--output_path',
@@ -135,43 +136,58 @@ def compute_weighted_loss(pred, y, loss_fn):
     return avg_loss
 
 
-def train():
-    # Load dataset from saved npy
-    corrosion_data = np.load(args.corrosion_path, allow_pickle=True)
-    target_data = np.load(args.label_path, allow_pickle=False)
-
-    # Normalize corrosion data
-    corrosion_data = sklearn.preprocessing.normalize(corrosion_data, axis=0)
-
-    # Split to 70%/30% train/test sets
-    random_state = 32
-    X_train, X_val, y_train, y_val = train_test_split(
-        corrosion_data, target_data, test_size=0.3, random_state=random_state)
-
+def train(X_train,
+          y_train,
+          X_val=None,
+          y_val=None,
+          batch_size=1,
+          optimizer='Adam',
+          learning_rate=0.01,
+          weight_decay=1e-4,
+          num_epochs=100):
     # Instantiate training and test(validation) data
     train_data = Data(X_train, y_train)
     train_dataloader = DataLoader(dataset=train_data,
-                                  batch_size=args.batch_size,
+                                  batch_size=batch_size,
                                   shuffle=True)
 
-    # Create single-batch test data
-    val_data = Data(X_val, y_val)
-    val_dataloader = DataLoader(dataset=val_data,
-                                batch_size=X_val.shape[0],
-                                shuffle=True)
-    val_input1, val_input2, val_y = list(val_dataloader)[0]
+    # If validation data is specified, create single-batch validation data
+    val_input1 = val_input2 = val_y = None
+    if X_val is not None:
+        val_data = Data(X_val, y_val)
+        val_dataloader = DataLoader(dataset=val_data,
+                                    batch_size=X_val.shape[0],
+                                    shuffle=True)
+        val_input1, val_input2, val_y = list(val_dataloader)[0]
 
     model = CNN1FC1()
 
     loss_fn = nn.BCELoss(reduction='none')
-    optimizer = torch.optim.Adam(model.parameters(),
-                                 lr=args.learning_rate,
-                                 weight_decay=1e-4)
 
-    for epoch in range(args.num_epochs):
+    # Define optimizer
+    assert optimizer in ["Adam", "RMSprop", "SGD"]
+    if optimizer == "Adam":
+        torch_optimizer = torch.optim.Adam(model.parameters(),
+                                           lr=learning_rate,
+                                           weight_decay=weight_decay)
+    elif optimizer == "RMSprop":
+        torch_optimizer = torch.topim.RMSprop(model.parameters(),
+                                              lr=learning_rate,
+                                              momentum=0,
+                                              alpha=0.99,
+                                              eps=1e-8,
+                                              weight_decay=weight_decay)
+
+    elif optimizer == "SGD":
+        torch_optimizer = torch.optim.SGD(model.parameters(),
+                                          lr=learning_rate,
+                                          momentum=0,
+                                          weight_decay=weight_decay)
+
+    for epoch in range(num_epochs):
         for input1, input2, y in train_dataloader:
             # zero the parameter gradients
-            optimizer.zero_grad()
+            torch_optimizer.zero_grad()
 
             # forward prop
             predictions = model(input1, input2)
@@ -188,10 +204,29 @@ def train():
 
             # compute gradients and update parameters
             avg_loss.backward()
-            optimizer.step()
+            torch_optimizer.step()
 
-    # Save model
-    torch.save(model.state_dict(), args.output_path)
+    return model
+
 
 if __name__ == '__main__':
-    train()
+    # Load dataset from saved npy
+    corrosion_data = np.load(args.corrosion_path, allow_pickle=True)
+    target_data = np.load(args.label_path, allow_pickle=False)
+
+    # Split to 80%/20% train/test sets
+    random_state = 42
+    X_train, X_val, y_train, y_val = train_test_split(
+        corrosion_data, target_data, test_size=0.2, random_state=random_state)
+
+    model = train(X_train=X_train,
+                  y_train=y_train,
+                  X_val=X_val,
+                  y_val=y_val,
+                  batch_size=args.batch_size,
+                  optimizer="Adam",
+                  learning_rate=args.learning_rate,
+                  num_epochs=args.num_epochs)
+
+    # Save trained model
+    torch.save(model.state_dict(), args.output_path)
