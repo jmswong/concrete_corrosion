@@ -17,10 +17,10 @@ def normalize_data(training_features, test_features):
     and the inference dataset.
 
     Args:
-		training_features: Numpy array of shape (num_train_samples, 343).
+	training_features: Numpy array of shape (num_train_samples, 343).
             Each row contains: simulation_idx, timestep, 4 concrete property
             featurs, and 337 corrosion depth features.
-		test_features: Numpy array of shape (num_test_samples, 343). Same
+	test_features: Numpy array of shape (num_test_samples, 343). Same
             as training_features.
 
 	Returns:
