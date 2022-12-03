@@ -126,12 +126,29 @@ class CNN1FC1(nn.Module):
         return torch.sigmoid(x)
 
 
-def compute_weighted_loss(pred, y, loss_fn):
+def compute_weighted_loss(pred, y, loss_fn, pos_weight=1):
+    '''
+    Computes a weighted version of a given binary loss_fn, weighing the
+    positive class by pos_weight (sometimes referred to as alpha).
+
+    weighted_loss = pos_weight * loss if y == 1 else loss
+
+    Args:
+        pred (tensor): Dim (num_samples, 1) tensor of predictions.
+        y (tensor): Dim (num_samples) tensor of true labels.
+        loss_fn (lambda): Binary loss function (e.g. BCELoss).
+        pos_weight: Weight applied to positive samples.
+
+    Returns:
+        avg_loss (tensor): Scalar, average weighted loss.
+    '''
     y = y.unsqueeze(-1)
     loss = loss_fn(pred, y)
-    # Weights for 0-labels = 1
-    # Weights for 1-labels = 10
-    weights = (y * 9 + 1)
+
+    # This constructs a weight vector where the element is pos_weight when
+    # y == 1 and 1 otherwise.
+    weights = (y * (pos_weight - 1) + 1)
+
     avg_loss = torch.sum(loss * weights) / sum(weights)
     return avg_loss
 
@@ -144,7 +161,9 @@ def train(X_train,
           optimizer='Adam',
           learning_rate=0.01,
           weight_decay=1e-4,
-          num_epochs=100):
+          positive_samples_weight=1,
+          num_epochs=100,
+          print_every=None):
     # Instantiate training and test(validation) data
     train_data = Data(X_train, y_train)
     train_dataloader = DataLoader(dataset=train_data,
@@ -177,7 +196,6 @@ def train(X_train,
                                               alpha=0.99,
                                               eps=1e-8,
                                               weight_decay=weight_decay)
-
     elif optimizer == "SGD":
         torch_optimizer = torch.optim.SGD(model.parameters(),
                                           lr=learning_rate,
@@ -193,12 +211,16 @@ def train(X_train,
             predictions = model(input1, input2)
 
             # compute weighted loss
-            avg_loss = compute_weighted_loss(predictions, y, loss_fn)
-            if epoch % 10 == 0:
-                # Also compute validation loss
-                validation_predictions = model(val_input1, val_input2)
-                validation_avg_loss = compute_weighted_loss(
-                    validation_predictions, val_y, loss_fn)
+            avg_loss = compute_weighted_loss(predictions, y, loss_fn,
+                                             positive_samples_weight)
+
+            # also compute validation loss
+            validation_predictions = model(val_input1, val_input2)
+            validation_avg_loss = compute_weighted_loss(
+                validation_predictions, val_y, loss_fn,
+                positive_samples_weight)
+
+            if print_every is not None and epoch % print_every == 0:
                 print(f"Epoch %4d- Training Loss:%.5f   Validation Loss:%.5f" % \
                       (epoch, avg_loss, validation_avg_loss))
 
@@ -226,7 +248,9 @@ if __name__ == '__main__':
                   batch_size=args.batch_size,
                   optimizer="Adam",
                   learning_rate=args.learning_rate,
-                  num_epochs=args.num_epochs)
+                  positive_samples_weight=1,
+                  num_epochs=args.num_epochs,
+                  print_every=100)
 
     # Save trained model
     torch.save(model.state_dict(), args.output_path)
