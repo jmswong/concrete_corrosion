@@ -95,7 +95,7 @@ def extract_FEM_output(zipped_path, num_simulations=1, extract_all=False):
                 continue
 
             full_file_name = zip_filename.split(".")[0] + "/" + file_name
-            print("extracting " + full_file_name + " to " + FEM_dir)
+            # print("extracting " + full_file_name + " to " + FEM_dir)
             zip_obj.extract(full_file_name, FEM_dir)
 
             # parse for simulation_idx and timestep
@@ -134,7 +134,9 @@ def extract_concrete_outputs_from_filepath(filepath):
     }
 
 
-def extract_concrete_outputs(path, num_simulations=1, simulation_timesteps=None):
+def extract_concrete_outputs(path,
+                             num_simulations=1,
+                             simulation_timesteps=None):
     '''
     Extract concrete output files. Returns a list of pairs, each
     containing the output filename and the concrete output dictionary.

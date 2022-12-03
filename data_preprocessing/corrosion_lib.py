@@ -8,7 +8,8 @@ NUM_TIMESTEPS_PER_SIMULATION = 9
 
 def extract_corrosion_output(path,
                              num_simulations=1,
-                             simulation_timesteps=None):
+                             simulation_timesteps=None,
+                             verbose=False):
     '''
     Unzip specified corrosion files into the same directory.
 
@@ -19,6 +20,7 @@ def extract_corrosion_output(path,
         simulation_timesteps: List of (simulation index, timestep) pairs. If
             this is specified, ignore num_simulations and extract all corrosion
             files specified by the list.
+        verbose (bool): If true, print detailed debug.
     '''
     if simulation_timesteps is not None:
         corrosion_filenames = get_all_filenames_from_list(simulation_timesteps)
@@ -37,7 +39,8 @@ def extract_corrosion_output(path,
                 continue
             full_file_name = path.split("/")[-1].split(
                 ".")[0] + "/" + file_name
-            print("extracting " + full_file_name + " to " + corrosion_dir)
+            if verbose:
+                print("extracting " + full_file_name + " to " + corrosion_dir)
             zip_obj.extract(full_file_name, corrosion_dir)
 
 
@@ -193,7 +196,7 @@ def verify_rebar_locations(file_and_corrosion_map):
     return all(x == rebar_locations[0] for x in rebar_locations)
 
 
-def remap_output_scales(file_and_corrosion_maps, output_maps):
+def remap_output_scales(file_and_corrosion_maps, output_maps, verbose=False):
     '''
     The corrosion depth data generated from COMSOL are on different scales. This
     rescales them based on a hard-coded scaling factor.
@@ -202,9 +205,9 @@ def remap_output_scales(file_and_corrosion_maps, output_maps):
         file_and_corrosion_maps (list): List of (filename, corrosion_map) tuples.
             corrosion_map is a dictionary mapping from points on the x-axis of a
             horizontal rebar to corrosion depths.
-
         output_maps (list): List of (filename, output_map) tuples. output_map is
             a dictionary containing various properties of the output data.
+        verbose (bool): If true, print detailed debug.
 
     Returns:
         list: New list of corrosion_map, scaled accordingly.   
@@ -240,8 +243,9 @@ def remap_output_scales(file_and_corrosion_maps, output_maps):
                             corrosion_map_points[i]] = float(
                                 corrosion_depths_from_output[i][0])
             assert replacement_corrosion_map, "Failed to find matching output for corrosion file %s" % file_path
-            print("Replacing corrosion map from %s with %s" %
-                  (file_path, output_path))
+            if verbose:
+                print("Replacing corrosion map from %s with %s" %
+                      (file_path, output_path))
             output.append((file_path, replacement_corrosion_map))
 
         if scaling_factor is not None:

@@ -19,6 +19,9 @@ parser.add_argument(
     action='store_true',
     help='If true, unzip and extract files from zipped filepath.')
 parser.add_argument('--corrosion_zipped_filename', default='corrosion.zip')
+parser.add_argument('--verbose',
+                    action='store_true',
+                    help='True to print detailed debug')
 parser.add_argument('--output_zipped_filename', default='Data_outputs.zip')
 
 args = parser.parse_args()
@@ -112,7 +115,8 @@ def preprocess():
         corrosion_lib.extract_corrosion_output(
             args.output_path + '/' + args.corrosion_zipped_filename,
             args.num_simulations,
-            simulation_timesteps=simulation_timesteps)
+            simulation_timesteps=simulation_timesteps,
+            verbose=args.verbose)
 
     corrosion_maps = corrosion_lib.extract_1d_corrosion_maps(
         args.output_path,
@@ -126,7 +130,8 @@ def preprocess():
     # Rescale corrosion depths to all be on the same scale. Also replace any
     # corrosion depths from outputs.
     corrosion_maps = corrosion_lib.remap_output_scales(corrosion_maps,
-                                                       output_maps)
+                                                       output_maps,
+                                                       verbose=args.verbose)
 
     # check that all corrosion datapoints are on the same rebar scale
     assert corrosion_lib.verify_rebar_locations(corrosion_maps)
