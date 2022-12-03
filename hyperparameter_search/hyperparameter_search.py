@@ -105,6 +105,13 @@ def get_train_and_val_dataloaders(train_batch_size):
 
 
 def train_and_validate(config):
+    '''
+    Create DataLoaders, instantiate model, train model. Checkpoints and saves
+    models for RayTune.
+
+    Args:
+        config (dict): RayTune config with hyperparameter values
+    '''
     train_dataloader, val_dataloader = get_train_and_val_dataloaders(
         config["batch_size"])
     # Initialize the model.
