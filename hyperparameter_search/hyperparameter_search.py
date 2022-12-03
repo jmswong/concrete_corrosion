@@ -105,7 +105,7 @@ def train_and_validate(config):
     train_dataloader, val_dataloader = get_train_and_val_dataloaders(
         config["batch_size"])
     # Initialize the model.
-    model = model_func()
+    model = model_func(kernel_size=config['kernel_size'], stride=1)
     # Define optimizer
     optimizer = config['optimizer']
     assert optimizer in ["Adam", "RMSprop", "SGD"]
@@ -171,6 +171,8 @@ def random_search():
         tune.choice(["Adam", "RMSprop", "SGD"]),
         "pos_weight":
         tune.choice([1]),
+        "kernel_size":
+        tune.choice([16, 32]),
     }
 
     # Asynchronous Successive Halving Algorithm (Li et al. 2018)
