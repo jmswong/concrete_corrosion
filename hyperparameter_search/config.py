@@ -14,3 +14,5 @@ GRACE_PERIOD = 1000
 # For search run (Ray Tune settings).
 CPU = 1
 GPU = 0
+# Scheduler
+SCHEDULER = "ASHA"

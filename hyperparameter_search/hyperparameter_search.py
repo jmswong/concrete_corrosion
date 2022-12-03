@@ -1,5 +1,5 @@
 from config import (MAX_NUM_EPOCHS, GRACE_PERIOD, EPOCHS, CPU, GPU,
-                    DATA_ROOT_DIR, NUM_WORKERS, VALID_SPLIT)
+                    DATA_ROOT_DIR, NUM_WORKERS, VALID_SPLIT, SCHEDULER)
 from ray import tune
 from ray.tune import CLIReporter
 from ray.tune.schedulers import ASHAScheduler, PopulationBasedTraining
@@ -84,7 +84,10 @@ def get_train_and_val_dataloaders(train_batch_size):
     # Split to 80%/20% train/test sets
     random_state = 42
     X_train, X_val, y_train, y_val = train_test_split(
-        corrosion_data, target_data, test_size=0.2, random_state=random_state)
+        corrosion_data,
+        target_data,
+        test_size=VALID_SPLIT,
+        random_state=random_state)
 
     # Instantiate training and test(validation) data
     train_data = Data(X_train, y_train)
@@ -199,18 +202,19 @@ def random_search():
     ])
 
     # Start run/search
-    result = tune.run(train_and_validate,
-                      resources_per_trial={
-                          "cpu": CPU,
-                          "gpu": GPU
-                      },
-                      config=config,
-                      num_samples=args.num_runs,
-                      scheduler=asha_scheduler,
-                      local_dir='../outputs/raytune_result',
-                      keep_checkpoints_num=1,
-                      checkpoint_score_attr='f1',
-                      progress_reporter=reporter)
+    result = tune.run(
+        train_and_validate,
+        resources_per_trial={
+            "cpu": CPU,
+            "gpu": GPU
+        },
+        config=config,
+        num_samples=args.num_runs,
+        scheduler=(asha_scheduler if SCHEDULER == "ASHA" else pbt_scheduler),
+        local_dir='../outputs/raytune_result',
+        keep_checkpoints_num=1,
+        checkpoint_score_attr='f1',
+        progress_reporter=reporter)
 
     # Extract the best trial run from the search.
     best_trial = result.get_best_trial('f1', 'max', 'last')
