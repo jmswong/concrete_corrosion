@@ -16,5 +16,5 @@ Validation loss, precision, recall, f1 score, and AUC metrics are reported for e
 ## Example Usage
 ```
 export PYTHONPATH="${PYTHONPATH}:/path/to/model"
-python3 hyperparameter_search.py --num_runs=100
+python3 hyperparameter_search.py --num_runs=100 --corrosion_path=/path/to/corrosion.npy --label_path=/path/to/target_labels.npy 
 ```
