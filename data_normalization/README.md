@@ -15,5 +15,5 @@ Args:
 - training_data_dir (str): Path to location of training data. Should contain files `corrosion_train.npy` and `corrosion_test.npy`.
 
 Outputs: 
-- training_features_normalized: Numpy array of the same shape as training_features, with normalization.
-- test_features_normalized: Numpy array of the same shape as test_features, with normalization.
+- `training_features_normalized.npy`: Numpy array of the same shape as `corrosion_train.npy`, with normalization.
+- `test_features_normalized.npy`: Numpy array of the same shape as `corrosion_test.npy`, with normalization.
