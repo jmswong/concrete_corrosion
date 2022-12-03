@@ -44,6 +44,10 @@ parser.add_argument('--learning_rate',
                     type=float,
                     default=0.01,
                     help="Learning rate")
+parser.add_argument('--print_every',
+                    type=int,
+                    default=100,
+                    help="Print training and validation loss every this many epochs.")
 
 args = parser.parse_args()
 
@@ -250,7 +254,7 @@ if __name__ == '__main__':
                   learning_rate=args.learning_rate,
                   positive_samples_weight=1,
                   num_epochs=args.num_epochs,
-                  print_every=100)
+                  print_every=args.print_every)
 
     # Save trained model
     torch.save(model.state_dict(), args.output_path)
