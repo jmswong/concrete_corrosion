@@ -44,6 +44,19 @@ def join_corrosion_and_outputs(corrosion_maps, output_maps):
                       file_name)
         simulation_idx, timestep = int(m.group(1)), int(m.group(2))
 
+        # Since we've verified the x-axis evenly distributed and are are all on the
+        # same scale, we can drop the points on the x-axis and represent the
+        # corrosion depths for a single timestep as a vector in 1d or matrix in 2d.
+        corrosion_depths = list(corrosion_map.values())
+
+        # Sanity check corrosion depths
+        max_corrosion_depth = max(corrosion_depths)
+        if (max_corrosion_depth > 0.1):
+            print(
+                "Skipping simulation %d timestep %d since max depth %f too high"
+                % (simulation_idx, timestep, max_corrosion_depth))
+            continue
+
         # We are missing correct corrosion data for the first 25 simulations. For now, we just remove these examples.
         # TODO: fix the bug and remove this
         # if simulation_idx <= 25:
@@ -68,19 +81,6 @@ def join_corrosion_and_outputs(corrosion_maps, output_maps):
             print(
                 "Skipping simulation %d timestep %d since output is missing" %
                 (simulation_idx, timestep))
-            continue
-
-        # Since we've verified the x-axis evenly distributed and are are all on the
-        # same scale, we can drop the points on the x-axis and represent the
-        # corrosion depths for a single timestep as a vector in 1d or matrix in 2d.
-        corrosion_depths = list(corrosion_map.values())
-
-        # Sanity check corrosion depths
-        max_corrosion_depth = max(corrosion_depths)
-        if (max_corrosion_depth > 0.1):
-            print(
-                "Skipping simulation %d timestep %d since max depth %f too high"
-                % (simulation_idx, timestep, max_corrosion_depth))
             continue
 
         # We will let the first and second columns of the output represent the simulation
