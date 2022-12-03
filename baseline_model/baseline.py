@@ -18,48 +18,6 @@ from sklearn.metrics import recall_score
 
 from sklearn.model_selection import train_test_split
 
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    '--corrosion_path',
-    default=
-    '/home/wongjames/cs230/Project/data_12_2_2022/corrosion_train_normalized.npy',
-    help="Path of saved corrosion numpy array")
-parser.add_argument(
-    '--label_path',
-    default='/home/wongjames/cs230/Project/data_12_2_2022/labels_train.npy',
-    help="Path of saved target label numpy array")
-parser.add_argument(
-    '--output_path',
-    default='/home/wongjames/cs230/Project/models/baseline_model.pt',
-    help="Path to save trained pytorch model state")
-parser.add_argument(
-    '--optimizer',
-    default='Adam',
-    help="Optimization algorithm. One of {'Adam', 'RMSprop', 'SGD'}")
-parser.add_argument('--batch_size',
-                    type=int,
-                    default=1,
-                    help="Batch size to use for training")
-parser.add_argument('--num_epochs',
-                    type=int,
-                    default=100,
-                    help="Number of training epochs")
-parser.add_argument('--learning_rate',
-                    type=float,
-                    default=0.01,
-                    help="Learning rate")
-parser.add_argument('--weight_decay',
-                    type=float,
-                    default=1e-4,
-                    help="Weight decay amount")
-parser.add_argument(
-    '--print_every',
-    type=int,
-    default=100,
-    help="Print training and validation loss every this many epochs.")
-
-args = parser.parse_args()
-
 
 class Data(Dataset):
     '''
@@ -207,8 +165,13 @@ def validate(model, data_loader, positive_samples_weight=1):
         precision_score = sklearn.metrics.precision_score(y, binary_preds)
         recall_score = sklearn.metrics.recall_score(y, binary_preds)
         f1_score = sklearn.metrics.f1_score(y, binary_preds)
-        roc_auc = sklearn.metrics.roc_auc_score(y,
-                                                predictions.detach().numpy())
+        # ROC_AUC is not defined if only 1 class exists
+        if (len(set(y.tolist()))) > 1:
+            roc_auc = sklearn.metrics.roc_auc_score(
+                y,
+                predictions.detach().numpy())
+        else:
+            roc_auc = 0
 
         # Add metrics to totals
         total_loss += avg_loss
@@ -253,10 +216,10 @@ def train_epoch(model, data_loader, optimizer, positive_samples_weight=1):
     total_recall = 0
     total_f1 = 0
     total_roc_auc = 0
-    for input1, input2, y in train_dataloader:
+    for input1, input2, y in data_loader:
         counter += 1
         # zero the parameter gradients
-        torch_optimizer.zero_grad()
+        optimizer.zero_grad()
 
         # forward prop
         predictions = model(input1, input2)
@@ -270,8 +233,13 @@ def train_epoch(model, data_loader, optimizer, positive_samples_weight=1):
         precision_score = sklearn.metrics.precision_score(y, binary_preds)
         recall_score = sklearn.metrics.recall_score(y, binary_preds)
         f1_score = sklearn.metrics.f1_score(y, binary_preds)
-        roc_auc = sklearn.metrics.roc_auc_score(y,
-                                                predictions.detach().numpy())
+        # ROC_AUC is not defined if only 1 class exists
+        if (len(set(y.tolist()))) > 1:
+            roc_auc = sklearn.metrics.roc_auc_score(
+                y,
+                predictions.detach().numpy())
+        else:
+            roc_auc = 0
 
         # Add metrics to totals
         total_loss += avg_loss
@@ -282,7 +250,7 @@ def train_epoch(model, data_loader, optimizer, positive_samples_weight=1):
 
         # compute gradients and update parameters
         avg_loss.backward()
-        torch_optimizer.step()
+        optimizer.step()
 
     avg_loss = total_loss / counter
     avg_precision = total_precision / counter
@@ -297,6 +265,48 @@ def main():
     '''
     Load training data, train model, save model outuputs.
     '''
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--corrosion_path',
+        default=
+        '/home/wongjames/cs230/Project/data_12_2_2022/corrosion_train_normalized.npy',
+        help="Path of saved corrosion numpy array")
+    parser.add_argument(
+        '--label_path',
+        default='/home/wongjames/cs230/Project/data_12_2_2022/labels_train.npy',
+        help="Path of saved target label numpy array")
+    parser.add_argument(
+        '--output_path',
+        default='/home/wongjames/cs230/Project/models/baseline_model.pt',
+        help="Path to save trained pytorch model state")
+    parser.add_argument(
+        '--optimizer',
+        default='Adam',
+        help="Optimization algorithm. One of {'Adam', 'RMSprop', 'SGD'}")
+    parser.add_argument('--batch_size',
+                        type=int,
+                        default=128,
+                        help="Batch size to use for training")
+    parser.add_argument('--num_epochs',
+                        type=int,
+                        default=100,
+                        help="Number of training epochs")
+    parser.add_argument('--learning_rate',
+                        type=float,
+                        default=0.01,
+                        help="Learning rate")
+    parser.add_argument('--weight_decay',
+                        type=float,
+                        default=1e-4,
+                        help="Weight decay amount")
+    parser.add_argument(
+        '--print_every',
+        type=int,
+        default=100,
+        help="Print training and validation loss every this many epochs.")
+
+    args = parser.parse_args()
+
     # Load dataset from saved npy
     corrosion_data = np.load(args.corrosion_path, allow_pickle=True)
     target_data = np.load(args.label_path, allow_pickle=False)
