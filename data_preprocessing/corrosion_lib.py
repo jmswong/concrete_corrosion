@@ -64,11 +64,20 @@ def get_all_filenames_from_list(simulation_timesteps):
     return filenames
 
 
-# Returns a list of corrosion simulation filenames, for the first num_simulation
-# datapoints. Note that the files are 1-indexed, so this returns filenames from
-# simulation 1 ... (num_simulations+1). Each simulation contains
-# NUM_TIMESTEPS_PER_SIMULATION files, one per timestep.
 def get_corrosion_filenames(num_simulations=1):
+    '''
+    Returns a list of corrosion simulation filenames, for the first num_simulation
+    datapoints. Note that the files are 1-indexed, so this returns filenames from
+    simulation 1 ... (num_simulations+1). Each simulation contains
+    NUM_TIMESTEPS_PER_SIMULATION files, one per timestep.
+
+    Args:
+        num_simulations (int): If set, extract all timesteps for the first
+            num_simulation experiments.
+
+    Returns:
+        list (str): List of filenames for corrosion input files.
+    '''
     filenames = []
     # file names from COMSOL are 1-indexed
     for simulation_idx in range(1, num_simulations + 1):
@@ -79,9 +88,19 @@ def get_corrosion_filenames(num_simulations=1):
     return filenames
 
 
-# Similar to get_corrosion_filenames, but takes in a list of
-# (simulation, timestep) tuples and only extracts the specified samples.
 def get_corrosion_filenames_subset(simulation_timesteps):
+    '''
+    Similar to get_corrosion_filenames, but takes in a list of
+    (simulation, timestep) tuples and only extracts the specified samples.
+
+    Args:
+        simulation_timesteps: List of (simulation index, timestep) pairs. If
+            this is specified, ignore num_simulations and extract all corrosion
+            files specified by the list.
+
+    Returns:
+        list (str): List of filenames for corrosion input files.
+    '''
     filenames = []
     for simulation_idx, timestep in simulation_timesteps:
         filename = "Corrosion_simulation_%d_timeStep_%d.txt" % (simulation_idx,
@@ -187,11 +206,21 @@ def extract_1d_corrosion_maps(output_dir,
     return file_and_corrosion_map
 
 
-# Asserts that all corrosion simulations are sampled from the same rebar
-# locations- that is, the points along the x-axis of the rebar are the same for
-# all samples. If they are not, then we will need to rescale the inputs before
-# training.
 def verify_rebar_locations(file_and_corrosion_map):
+    '''
+    Asserts that all corrosion simulations are sampled from the same rebar
+    locations- that is, the points along the x-axis of the rebar are the same for
+    all samples. If they are not, then we will need to rescale the inputs before
+    training.
+
+    Args:
+        file_and_corrosion_maps (list): List of (filename, corrosion_map) tuples.
+            corrosion_map is a dictionary mapping from points on the x-axis of a
+            horizontal rebar to corrosion depths.
+
+    Returns:
+        bool: True if all corrosion maps are sampled from the same locations.
+    '''
     rebar_locations = [tuple(x[1].keys()) for x in file_and_corrosion_map]
     return all(x == rebar_locations[0] for x in rebar_locations)
 

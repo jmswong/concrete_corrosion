@@ -8,8 +8,16 @@ import zipfile
 NUM_TIMESTEPS_PER_SIMULATION = 9
 
 
-# Returns a list of FEM filenames for the first num_simulation runs of FEM.
 def get_FEM_filenames(num_simulations=1):
+    '''
+    Returns a list of FEM filenames for the first num_simulation runs of FEM.
+
+    Args:
+        num_simulations (int): Get filenames for this many simulations.
+
+    Returns:
+        list (str): List of output filenames containing output labels.
+    '''
     filenames = []
     for simulation_idx in range(1, num_simulations + 1):
         for timestep in range(1, NUM_TIMESTEPS_PER_SIMULATION + 1):
@@ -29,7 +37,6 @@ def get_FEM_filenames_from_list(simulation_timesteps):
 
     Returns:
         list (str): List of output filenames containing output labels.
-
     '''
     filenames = []
     for simulation_idx, timestep in simulation_timesteps:
@@ -38,8 +45,16 @@ def get_FEM_filenames_from_list(simulation_timesteps):
     return filenames
 
 
-# Returns a list of (simulation_idx, timestep) pairs for all FEM outputs in the given zip file.
 def get_all_simulation_timesteps_from_zip(path):
+    '''
+    Returns a list of (simulation_idx, timestep) pairs for all FEM outputs in the given zip file.
+
+    Args:
+        path (str): Path to zipped output data.
+
+    Returns:
+        list: List of (simulation_index, timesteps) that were successfully extracted.
+    '''
     output = []
     with zipfile.ZipFile(path, 'r') as zip_obj:
         file_names = zip_obj.namelist()
@@ -109,9 +124,17 @@ def extract_FEM_output(zipped_path, num_simulations=1, extract_all=False):
     return sorted(output)
 
 
-# Extract concrete properties and surface cracking target label from specified
-# output file. Returns a dictionary of concrete statistics and the target label.
 def extract_concrete_outputs_from_filepath(filepath):
+    '''
+    Extract concrete properties and surface cracking target label from specified
+    output file. Returns a dictionary of concrete statistics and the target label.
+    
+    Args:
+        filepath (str): Path to single output file.
+
+    Returns:
+        dict: dictionary of concrete statistics and the target label.
+    '''
     mat = scipy.io.loadmat(filepath)
     rebar = mat['rebar'][0][0]
     cover = mat['cover'][0][0]

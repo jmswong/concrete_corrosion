@@ -97,6 +97,9 @@ def join_corrosion_and_outputs(corrosion_maps, output_maps):
 
 
 def shuffle_numpy_pair(a, b):
+    '''
+    Jointly shuffle two numpy arrays of same length.
+    '''
     assert len(a) == len(b)
     np.random.seed(42)
     p = np.random.permutation(len(a))
