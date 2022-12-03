@@ -60,13 +60,15 @@ def normalize_data(training_features, test_features):
         means.append(params['mu_c'])
         stdevs.append(params['std_c'])
 
+    means = np.array(means)
+    stdevs = np.array(stdevs)
+
     # Normalize training and test sets by subtracting the mean and dividing by
     # standard deviation.from training and test features. The same vector
     # computed above can be used in both, due to numpy broadcasting.
     training_features_normalized = (training_features - means) / stdevs
     test_features_normalized = (test_features - means) / stdevs
 
-    pdb.set_trace()
     return training_features_normalized, test_features_normalized
 
 
