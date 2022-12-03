@@ -2,7 +2,7 @@ from config import (MAX_NUM_EPOCHS, GRACE_PERIOD, EPOCHS, CPU, GPU,
                     DATA_ROOT_DIR, NUM_WORKERS, VALID_SPLIT)
 from ray import tune
 from ray.tune import CLIReporter
-from ray.tune.schedulers import ASHAScheduler
+from ray.tune.schedulers import ASHAScheduler, PopulationBasedTraining
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -34,33 +34,33 @@ parser.add_argument(
     default='/home/wongjames/cs230/Project/data_12_2_2022/labels_train.npy',
     help="Path of saved target label numpy array")
 parser.add_argument('--num_runs',
-					type=int,
-					default=10,
-					help="Number of runs for random search")
+                    type=int,
+                    default=10,
+                    help="Number of runs for random search")
 parser.add_argument('--min_batch_size',
-					type=int,
-					default=64,
-					help="Minimum batch size for random search")
+                    type=int,
+                    default=64,
+                    help="Minimum batch size for random search")
 parser.add_argument('--max_batch_size',
-					type=int,
-					default=512,
-					help="Maximum batch size for random search")
+                    type=int,
+                    default=512,
+                    help="Maximum batch size for random search")
 parser.add_argument('--min_lr',
-					type=float,
-					default=1e-4,
-					help="Minimum Learning rate for random search")
+                    type=float,
+                    default=1e-4,
+                    help="Minimum Learning rate for random search")
 parser.add_argument('--max_lr',
-					type=float,
-					default=10,
-					help="Maximum Learning rate for random search")
+                    type=float,
+                    default=10,
+                    help="Maximum Learning rate for random search")
 parser.add_argument('--min_weight_decay',
-					type=float,
-					default=1e-5,
-					help="Minimum weight decay for random search")
+                    type=float,
+                    default=1e-5,
+                    help="Minimum weight decay for random search")
 parser.add_argument('--max_weight_decay',
-					type=float,
-					default=1e-2,
-					help="Maximum weight decay for random search")
+                    type=float,
+                    default=1e-2,
+                    help="Maximum weight decay for random search")
 
 args = parser.parse_args()
 
@@ -138,10 +138,11 @@ def train_and_validate(config):
             model=model,
             data_loader=val_dataloader,
             positive_samples_weight=config["pos_weight"])
-		
+
         with tune.checkpoint_dir(epoch) as checkpoint_dir:
             path = os.path.join(checkpoint_dir, 'checkpoint')
-            torch.save((model.state_dict(), torch_optimizer.state_dict()), path)
+            torch.save((model.state_dict(), torch_optimizer.state_dict()),
+                       path)
 
         tune.report(loss=val_loss,
                     precision=val_precision,
@@ -155,24 +156,40 @@ def random_search():
     Runs random hyperparameter search over parameters specified by config.
     '''
     # Define the parameter search configuration.
-	# Create a set of batch sizes between min and max, in multiples of 2
+    # Create a set of batch sizes between min and max, in multiples of 2
     batch_sizes = [args.min_batch_size]
-    while batch_sizes[-1]*2 <= args.max_batch_size:
-        batch_sizes.append(batch_sizes[-1]*2)
+    while batch_sizes[-1] * 2 <= args.max_batch_size:
+        batch_sizes.append(batch_sizes[-1] * 2)
     config = {
-        "lr": tune.loguniform(args.min_lr, args.max_lr),
-        "batch_size": tune.choice(batch_sizes),
-        "weight_decay": tune.loguniform(args.min_weight_decay, args.max_weight_decay),
-        "optimizer": tune.choice(["Adam", "RMSprop", "SGD"]),
-        "pos_weight": tune.choice([1]),
+        "lr":
+        tune.loguniform(args.min_lr, args.max_lr),
+        "batch_size":
+        tune.choice(batch_sizes),
+        "weight_decay":
+        tune.loguniform(args.min_weight_decay, args.max_weight_decay),
+        "optimizer":
+        tune.choice(["Adam", "RMSprop", "SGD"]),
+        "pos_weight":
+        tune.choice([1]),
     }
 
-    # Schduler to stop bad performing trails.
-    scheduler = ASHAScheduler(metric="f1",
-                              mode="min",
-                              max_t=MAX_NUM_EPOCHS,
-                              grace_period=GRACE_PERIOD,
-                              reduction_factor=2)
+    # Asynchronous Successive Halving Algorithm (Li et al. 2018)
+    asha_scheduler = ASHAScheduler(metric="f1",
+                                   mode="max",
+                                   max_t=MAX_NUM_EPOCHS,
+                                   grace_period=GRACE_PERIOD,
+                                   reduction_factor=2)
+
+    # Population Based Training Scheduler (Jaderberg et al. 2017)
+    pbt_scheduler = PopulationBasedTraining(
+        time_attr='training_iteration',
+        metric='f1',
+        mode='max',
+        perturbation_interval=100.0,
+        resample_probability=0.5,
+        hyperparam_mutations=config,
+        synch=False,
+    )
 
     # Reporter to show on command line/output window
     reporter = CLIReporter(metric_columns=[
@@ -187,17 +204,17 @@ def random_search():
                       },
                       config=config,
                       num_samples=args.num_runs,
-                      scheduler=scheduler,
+                      scheduler=asha_scheduler,
                       local_dir='../outputs/raytune_result',
                       keep_checkpoints_num=1,
-                      checkpoint_score_attr='min-loss_f1_precision_recall',
+                      checkpoint_score_attr='f1',
                       progress_reporter=reporter)
 
     # Extract the best trial run from the search.
-    best_trial = result.get_best_trial('f1', 'min', 'last')
+    best_trial = result.get_best_trial('f1', 'max', 'last')
 
-    print(f"Lowest f1 score config: {best_trial.config}")
-    print(f"Lowest f1 score: {best_trial.last_result['f1']}")
+    print(f"Highest f1 score config: {best_trial.config}")
+    print(f"Highest f1 score: {best_trial.last_result['f1']}")
 
 
 if __name__ == '__main__':
