@@ -32,6 +32,10 @@ parser.add_argument(
     '--output_path',
     default='/home/wongjames/cs230/Project/models/baseline_model.pt',
     help="Path to save trained pytorch model state")
+parser.add_argument(
+    '--optimizer',
+    default='Adam',
+    help="Optimization algorithm. One of {'Adam', 'RMSprop', 'SGD'}")
 parser.add_argument('--batch_size',
                     type=int,
                     default=1,
@@ -44,10 +48,15 @@ parser.add_argument('--learning_rate',
                     type=float,
                     default=0.01,
                     help="Learning rate")
-parser.add_argument('--print_every',
-                    type=int,
-                    default=100,
-                    help="Print training and validation loss every this many epochs.")
+parser.add_argument('--weight_decay',
+                    type=float,
+                    default=1e-4,
+                    help="Weight decay amount")
+parser.add_argument(
+    '--print_every',
+    type=int,
+    default=100,
+    help="Print training and validation loss every this many epochs.")
 
 args = parser.parse_args()
 
@@ -157,82 +166,100 @@ def compute_weighted_loss(pred, y, loss_fn, pos_weight=1):
     return avg_loss
 
 
-def train(X_train,
-          y_train,
-          X_val=None,
-          y_val=None,
-          batch_size=1,
-          optimizer='Adam',
-          learning_rate=0.01,
-          weight_decay=1e-4,
-          positive_samples_weight=1,
-          num_epochs=100,
-          print_every=None):
-    # Instantiate training and test(validation) data
-    train_data = Data(X_train, y_train)
-    train_dataloader = DataLoader(dataset=train_data,
-                                  batch_size=batch_size,
-                                  shuffle=True)
-
-    # If validation data is specified, create single-batch validation data
-    val_input1 = val_input2 = val_y = None
-    if X_val is not None:
-        val_data = Data(X_val, y_val)
-        val_dataloader = DataLoader(dataset=val_data,
-                                    batch_size=X_val.shape[0],
-                                    shuffle=True)
-        val_input1, val_input2, val_y = list(val_dataloader)[0]
-
-    model = CNN1FC1()
+def validate(model, data_loader, positive_samples_weight=1):
+    model.eval()
 
     loss_fn = nn.BCELoss(reduction='none')
 
-    # Define optimizer
-    assert optimizer in ["Adam", "RMSprop", "SGD"]
-    if optimizer == "Adam":
-        torch_optimizer = torch.optim.Adam(model.parameters(),
-                                           lr=learning_rate,
-                                           weight_decay=weight_decay)
-    elif optimizer == "RMSprop":
-        torch_optimizer = torch.topim.RMSprop(model.parameters(),
-                                              lr=learning_rate,
-                                              momentum=0,
-                                              alpha=0.99,
-                                              eps=1e-8,
-                                              weight_decay=weight_decay)
-    elif optimizer == "SGD":
-        torch_optimizer = torch.optim.SGD(model.parameters(),
-                                          lr=learning_rate,
-                                          momentum=0,
-                                          weight_decay=weight_decay)
+    counter = 0
+    total_loss = 0
+    total_precision = 0
+    total_recall = 0
+    total_f1 = 0
+    total_roc_auc = 0
+    for input1, input2, y in data_loader:
+        counter += 1
 
-    for epoch in range(num_epochs):
-        for input1, input2, y in train_dataloader:
-            # zero the parameter gradients
-            torch_optimizer.zero_grad()
+        # forward prop
+        predictions = model(input1, input2)
 
-            # forward prop
-            predictions = model(input1, input2)
+        # compute weighted loss
+        avg_loss = compute_weighted_loss(predictions, y, loss_fn,
+                                         positive_samples_weight)
 
-            # compute weighted loss
-            avg_loss = compute_weighted_loss(predictions, y, loss_fn,
-                                             positive_samples_weight)
+        # compute evaluation metrics on training set
+        binary_preds = predictions > 0.5
+        precision_score = sklearn.metrics.precision_score(y, binary_preds)
+        recall_score = sklearn.metrics.recall_score(y, binary_preds)
+        f1_score = sklearn.metrics.f1_score(y, binary_preds)
+        roc_auc = sklearn.metrics.roc_auc_score(y,
+                                                predictions.detach().numpy())
 
-            # also compute validation loss
-            validation_predictions = model(val_input1, val_input2)
-            validation_avg_loss = compute_weighted_loss(
-                validation_predictions, val_y, loss_fn,
-                positive_samples_weight)
+        # Add metrics to totals
+        total_loss += avg_loss
+        total_precision += precision_score
+        total_recall += recall_score
+        total_f1 += f1_score
+        total_roc_auc += roc_auc
 
-            if print_every is not None and epoch % print_every == 0:
-                print(f"Epoch %4d- Training Loss:%.5f   Validation Loss:%.5f" % \
-                      (epoch, avg_loss, validation_avg_loss))
+    avg_loss = total_loss / counter
+    avg_precision = total_precision / counter
+    avg_recall = total_recall / counter
+    avg_f1 = total_f1 / counter
+    avg_roc_auc = total_roc_auc / counter
 
-            # compute gradients and update parameters
-            avg_loss.backward()
-            torch_optimizer.step()
+    return avg_loss, avg_precision, avg_recall, avg_f1, avg_roc_auc
 
-    return model
+
+def train_epoch(model, data_loader, optimizer, positive_samples_weight=1):
+    model.train()
+
+    loss_fn = nn.BCELoss(reduction='none')
+
+    counter = 0
+    total_loss = 0
+    total_precision = 0
+    total_recall = 0
+    total_f1 = 0
+    total_roc_auc = 0
+    for input1, input2, y in train_dataloader:
+        counter += 1
+        # zero the parameter gradients
+        torch_optimizer.zero_grad()
+
+        # forward prop
+        predictions = model(input1, input2)
+
+        # compute weighted loss
+        avg_loss = compute_weighted_loss(predictions, y, loss_fn,
+                                         positive_samples_weight)
+
+        # compute evaluation metrics on training set
+        binary_preds = predictions > 0.5
+        precision_score = sklearn.metrics.precision_score(y, binary_preds)
+        recall_score = sklearn.metrics.recall_score(y, binary_preds)
+        f1_score = sklearn.metrics.f1_score(y, binary_preds)
+        roc_auc = sklearn.metrics.roc_auc_score(y,
+                                                predictions.detach().numpy())
+
+        # Add metrics to totals
+        total_loss += avg_loss
+        total_precision += precision_score
+        total_recall += recall_score
+        total_f1 += f1_score
+        total_roc_auc += roc_auc
+
+        # compute gradients and update parameters
+        avg_loss.backward()
+        torch_optimizer.step()
+
+    avg_loss = total_loss / counter
+    avg_precision = total_precision / counter
+    avg_recall = total_recall / counter
+    avg_f1 = total_f1 / counter
+    avg_roc_auc = total_roc_auc / counter
+
+    return avg_loss, avg_precision, avg_recall, avg_f1, avg_roc_auc
 
 
 if __name__ == '__main__':
@@ -245,16 +272,59 @@ if __name__ == '__main__':
     X_train, X_val, y_train, y_val = train_test_split(
         corrosion_data, target_data, test_size=0.2, random_state=random_state)
 
-    model = train(X_train=X_train,
-                  y_train=y_train,
-                  X_val=X_val,
-                  y_val=y_val,
-                  batch_size=args.batch_size,
-                  optimizer="Adam",
-                  learning_rate=args.learning_rate,
-                  positive_samples_weight=1,
-                  num_epochs=args.num_epochs,
-                  print_every=args.print_every)
+    # Instantiate training and test(validation) data
+    train_data = Data(X_train, y_train)
+    train_dataloader = DataLoader(dataset=train_data,
+                                  batch_size=args.batch_size,
+                                  shuffle=True)
+
+    # Create single-batch validation data
+    val_data = Data(X_val, y_val)
+    val_dataloader = DataLoader(dataset=val_data,
+                                batch_size=X_val.shape[0],
+                                shuffle=True)
+
+    model = CNN1FC1()
+
+    # Define optimizer
+    assert args.optimizer in ["Adam", "RMSprop", "SGD"]
+    if args.optimizer == "Adam":
+        torch_optimizer = torch.optim.Adam(model.parameters(),
+                                           lr=args.learning_rate,
+                                           weight_decay=args.weight_decay)
+    elif args.optimizer == "RMSprop":
+        torch_optimizer = torch.topim.RMSprop(model.parameters(),
+                                              lr=args.learning_rate,
+                                              momentum=0,
+                                              alpha=0.99,
+                                              eps=1e-8,
+                                              weight_decay=args.weight_decay)
+    elif args.optimizer == "SGD":
+        torch_optimizer = torch.optim.SGD(model.parameters(),
+                                          lr=args.learning_rate,
+                                          momentum=0,
+                                          weight_decay=args.weight_decay)
+
+    # Amount to upweigh the positive samples in training.
+    positive_samples_weight = 1
+
+    for epoch in range(args.num_epochs):
+        train_loss, train_precision, train_recall, train_f1, train_roc_auc = train_epoch(
+            model=model,
+            data_loader=train_dataloader,
+            optimizer=torch_optimizer,
+            positive_samples_weight=positive_samples_weight)
+        val_loss, val_precision, val_recall, val_f1, val_roc_auc = validate(
+            model=model,
+            data_loader=val_dataloader,
+            positive_samples_weight=positive_samples_weight)
+
+        if args.print_every is not None and epoch % args.print_every == 0:
+            print(
+                "Epoch %4d- train_loss:%.3f val_loss:%.3f train_f1:%.3f "
+                "val_f1:%.3f train_roc_auc:%.3f val_roc_auc:%.3f"
+                % (epoch, train_loss, val_loss, train_f1, val_f1,
+                   train_roc_auc, val_roc_auc))
 
     # Save trained model
     torch.save(model.state_dict(), args.output_path)
