@@ -40,5 +40,13 @@ if __name__ == "__main__":
     corrosion_data_test = np.load(args.training_data_dir +
                                   '/corrosion_test.npy',
                                   allow_pickle=True)
-    normalized_data_train, normalized_data_test = normalize_data(
+    corrosion_train_normalized, corrosion_test_normalized = normalize_data(
         corrosion_data_train, corrosion_data_test)
+
+    # Save normalized datasets
+    with open(args.training_data_dir + "/corrosion_train_normalized.npy",
+              "wb") as f:
+        np.save(f, corrosion_train_normalized)
+    with open(args.training_data_dir + "/corrosion_test_normalized.npy",
+              "wb") as f:
+        np.save(f, corrosion_test_normalized)
