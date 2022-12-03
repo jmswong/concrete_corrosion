@@ -4,6 +4,7 @@ import argparse
 import copy
 import random
 import torch
+import math
 
 import numpy as np
 
@@ -17,6 +18,8 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 
 from sklearn.model_selection import train_test_split
+
+CORROSION_DEPTH_SIZE = 337
 
 
 class Data(Dataset):
@@ -50,17 +53,44 @@ class CNN1FC1(nn.Module):
     '''
     Baseline Convolution + FC model.
     This model runs corrosion depths through a single-layer 1d convolution with
-    one kernel of size 20, followed by ReLU and max-pooling with stride 16.
-    Then the output is concatenated with the 4 continuous concrete-property
-    features, and fed into a fully connected layer, with sigmoid activation.
+    one kernel of size kernel_size, followed by ReLU and max-pooling with the same
+    kernel_size and stride. Then the output is concatenated with the 4 continuous
+    concrete-property features, and fed into a fully connected layer, with sigmoid
+    activation.
     '''
-    def __init__(self):
+    def __init__(self, kernel_size=5, stride=1):
         super(CNN1FC1, self).__init__()
-        # 1 input image channel, 1 output channel, 20x1 convolution kernel
-        self.conv1 = nn.Conv1d(1, 1, 20)
+        # 1 input image channel, 1 output channel, kernel_size x 1 convolution kernel
+        self.conv1_output_size = math.floor((CORROSION_DEPTH_SIZE -
+                                             (kernel_size - 1) - 1) / stride +
+                                            1)
+        self.conv1 = nn.Conv1d(in_channels=1,
+                               out_channels=1,
+                               kernel_size=kernel_size,
+                               stride=stride)
+
+        pool_kernel_size = kernel_size
+        pool_stride = kernel_size
+        self.pool1_output_size = math.floor((self.conv1_output_size -
+                                             (pool_kernel_size - 1) - 1) /
+                                            pool_stride + 1)
+        self.pool1 = nn.MaxPool1d(kernel_size=pool_kernel_size,
+                                  stride=pool_stride)
 
         # fully connected layer, single output node
-        self.fc1 = nn.Linear(in_features=23, out_features=1, bias=True)
+        self.fc1 = nn.Linear(in_features=self.pool1_output_size + 4,
+                             out_features=1,
+                             bias=True)
+
+        self.print_model_architecture()
+
+    def print_model_architecture(self):
+        print("Conv1FC1 Model Architecture:")
+        print("  Corrosion Input: %d" % CORROSION_DEPTH_SIZE)
+        print("  Conv1d Output: %d" % self.conv1_output_size)
+        print("  MaxPool1d Output: %d" % self.pool1_output_size)
+        print("  FC1 Input: %d" % (self.pool1_output_size + 4))
+        print("  FC1 Output: %d" % 1)
 
     def forward(self, corrosion_depths, concrete_features):
         '''
@@ -81,13 +111,13 @@ class CNN1FC1(nn.Module):
 
         # Input: (batch x 1 x 318)
         # Output: (batch x 1 x 19)
-        x = torch.nn.MaxPool1d(kernel_size=16, stride=16)(x)
+        x = self.pool1(x)
 
         # Flatten to (batch x 19)
         x = torch.flatten(x, start_dim=1, end_dim=2)
 
         # Concat (batch x 19) with (batch x 4) -> (batch x 23)
-        x = torch.concat([x, concrete_features], dim=1)  #
+        x = torch.concat([x, concrete_features], dim=1)
 
         # fully connected layer
         # Input: (batch x 23)
