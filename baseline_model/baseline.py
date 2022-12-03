@@ -337,7 +337,7 @@ def main():
                                            lr=args.learning_rate,
                                            weight_decay=args.weight_decay)
     elif args.optimizer == "RMSprop":
-        torch_optimizer = torch.topim.RMSprop(model.parameters(),
+        torch_optimizer = torch.optim.RMSprop(model.parameters(),
                                               lr=args.learning_rate,
                                               momentum=0,
                                               alpha=0.99,
