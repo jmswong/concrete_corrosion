@@ -29,15 +29,21 @@ args = parser.parse_args()
 
 def join_corrosion_and_outputs(corrosion_maps, output_maps):
     '''
-	Merges input features from corrosion_maps (corrosion depths) with input features (concrete properties) and target labels from output_maps.
+	Merges input features from corrosion_maps (corrosion depths) with input
+    features (concrete properties) and target labels from output_maps.
     
 	Args:
-        corrosion_maps (list): List of dicts mapping from points on the x-axis of a horizontal rebar to corrosion depths.
-        output_maps (list): List of dicts containing various properties of the output data.
+        corrosion_maps (list): List of dicts mapping from points on the x-axis
+            of a horizontal rebar to corrosion depths.
+        output_maps (list): List of dicts containing various properties of the
+            output data.
 
     Returns:
-        corrosion output (numpy array): Array of shape (num_samples, 343). Each row contains: simulation_idx, timestep, 4 concrete property featurs, and 337 corrosion depth features.
-		labels output (numpy array): Boolean array of shape (num samples), indicating surface cracking.
+        corrosion output (numpy array): Array of shape (num_samples, 343). Each
+            row contains: simulation_idx, timestep, 4 concrete property
+            featurs, and 337 corrosion depth features.
+		labels output (numpy array): Boolean array of shape (num samples),
+            indicating surface cracking.
     '''
     corrosion_output = []
     target_output = []
@@ -60,7 +66,8 @@ def join_corrosion_and_outputs(corrosion_maps, output_maps):
                 % (simulation_idx, timestep, max_corrosion_depth))
             continue
 
-        # We are missing correct corrosion data for the first 25 simulations. For now, we just remove these examples.
+        # We are missing correct corrosion data for the first 25 simulations.
+        # For now, we just remove these examples.
         # TODO: fix the bug and remove this
         # if simulation_idx <= 25:
         #    continue
