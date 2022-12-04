@@ -5,12 +5,13 @@ import copy
 import random
 import torch
 import math
+import sys
 
 import numpy as np
 
 import torch.nn.functional as F
 from torch import nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 
 import sklearn
 from sklearn.metrics import accuracy_score
@@ -19,34 +20,10 @@ from sklearn.metrics import recall_score
 
 from sklearn.model_selection import train_test_split
 
+sys.path.append('..')
+from data_loader import get_data_loader
+
 CORROSION_DEPTH_SIZE = 337
-
-
-class Data(Dataset):
-    '''
-    Data class for corrosion data, concrete properties, and target label
-    '''
-    def __init__(self, corrosion_data, target_labels):
-        '''
-        The first 2 columns are the simulation_idx and timestep respectively,
-        and should not be used in training. Columns 3, 4, 5, and 6 are
-        floating-point representations of certain concrete properties
-        (in particular rebar, cover, tensile_strength, w_c, respectively).
-        Columns 7+ are the corrosion depths along the rebar.
-        '''
-        self.corrosion_inputs = torch.from_numpy(corrosion_data[:, 6:].astype(
-            np.float32))
-        self.concrete_inputs = torch.from_numpy(corrosion_data[:, 2:6].astype(
-            np.float32))
-        self.target_labels = torch.from_numpy(target_labels.astype(np.float32))
-        self.len = self.corrosion_inputs.shape[0]
-
-    def __getitem__(self, index):
-        return self.corrosion_inputs[index], self.concrete_inputs[
-            index], self.target_labels[index]
-
-    def __len__(self):
-        return self.len
 
 
 class Conv1FC1(nn.Module):
@@ -358,7 +335,10 @@ def train_and_test():
     if args.validate:
         random_state = 42
         X_train, X_val, y_train, y_val = train_test_split(
-            corrosion_data, target_data, test_size=0.2, random_state=random_state)
+            corrosion_data,
+            target_data,
+            test_size=0.2,
+            random_state=random_state)
     else:
         X_train = corrosion_data
         y_train = target_data
@@ -368,19 +348,15 @@ def train_and_test():
         X_train = X_train[:args.max_training_data_size]
         y_train = y_train[:args.max_training_data_size]
 
-    # Instantiate training and test(validation) data
-    train_data = Data(X_train, y_train)
+    print("Training data size: %d" % X_train.shape[0])
 
-    train_dataloader = DataLoader(dataset=train_data,
-                                  batch_size=args.batch_size,
-                                  shuffle=True)
+    train_dataloader = get_data_loader(X_train,
+                                       y_train,
+                                       batch_size=args.batch_size)
 
     # Create single-batch validation data
     if args.validate:
-        val_data = Data(X_val, y_val)
-        val_dataloader = DataLoader(dataset=val_data,
-                                    batch_size=X_val.shape[0],
-                                    shuffle=True)
+        val_dataloader = get_data_loader(X_val, y_val, batch_size=None)
 
     model = Conv1FC1()
 
