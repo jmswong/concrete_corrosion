@@ -5,18 +5,19 @@ from ray.tune import CLIReporter
 from ray.tune.schedulers import ASHAScheduler, PopulationBasedTraining
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
 import numpy as np
 import torch.optim as optim
 from sklearn.model_selection import train_test_split
 import argparse
 import os
+import sys
 
-# Requires adding model directory to PYTHONPATH
+sys.path.append('..')
+from data_loader import get_data_loader
+
 from baseline import Conv1FC1
 from baseline import train_epoch
 from baseline import validate
-from baseline import Data
 
 model_func = Conv1FC1
 train_epoch_func = train_epoch
@@ -90,16 +91,12 @@ def get_train_and_val_dataloaders(train_batch_size):
         random_state=random_state)
 
     # Instantiate training and test(validation) data
-    train_data = Data(X_train, y_train)
-    train_dataloader = DataLoader(dataset=train_data,
-                                  batch_size=train_batch_size,
-                                  shuffle=True)
+    train_dataloader = get_data_loader(X_train,
+                                       y_train,
+                                       batch_size=train_batch_size)
 
     # Create single-batch validation data
-    val_data = Data(X_val, y_val)
-    val_dataloader = DataLoader(dataset=val_data,
-                                batch_size=X_val.shape[0],
-                                shuffle=True)
+    val_dataloader = get_data_loader(X_val, y_val, batch_size=None)
 
     return train_dataloader, val_dataloader
 
