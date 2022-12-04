@@ -291,7 +291,7 @@ def train_epoch(model, data_loader, optimizer, positive_samples_weight=1):
     return avg_loss, avg_precision, avg_recall, avg_f1, avg_roc_auc
 
 
-def main():
+def train_and_test():
     '''
     Load training data, train model, save model outuputs.
     '''
@@ -315,7 +315,7 @@ def main():
         help="Optimization algorithm. One of {'Adam', 'RMSprop', 'SGD'}")
     parser.add_argument('--batch_size',
                         type=int,
-                        default=128,
+                        default=512,
                         help="Batch size to use for training")
     parser.add_argument('--num_epochs',
                         type=int,
@@ -334,6 +334,10 @@ def main():
         type=int,
         default=100,
         help="Print training and validation loss every this many epochs.")
+    parser.add_argument(
+        '--validate',
+        action='store_true',
+        help='True to split dataset and compute validation metrics')
 
     args = parser.parse_args()
 
@@ -353,10 +357,11 @@ def main():
                                   shuffle=True)
 
     # Create single-batch validation data
-    val_data = Data(X_val, y_val)
-    val_dataloader = DataLoader(dataset=val_data,
-                                batch_size=X_val.shape[0],
-                                shuffle=True)
+    if args.validate:
+        val_data = Data(X_val, y_val)
+        val_dataloader = DataLoader(dataset=val_data,
+                                    batch_size=X_val.shape[0],
+                                    shuffle=True)
 
     model = CNN1FC1()
 
@@ -388,20 +393,25 @@ def main():
             data_loader=train_dataloader,
             optimizer=torch_optimizer,
             positive_samples_weight=positive_samples_weight)
-        val_loss, val_precision, val_recall, val_f1, val_roc_auc = validate(
-            model=model,
-            data_loader=val_dataloader,
-            positive_samples_weight=positive_samples_weight)
 
-        if args.print_every is not None and epoch % args.print_every == 0:
-            print("Epoch %4d- train_loss:%.3f val_loss:%.3f train_f1:%.3f "
-                  "val_f1:%.3f train_roc_auc:%.3f val_roc_auc:%.3f" %
-                  (epoch, train_loss, val_loss, train_f1, val_f1,
-                   train_roc_auc, val_roc_auc))
+        if args.validate:
+            val_loss, val_precision, val_recall, val_f1, val_roc_auc = validate(
+                model=model,
+                data_loader=val_dataloader,
+                positive_samples_weight=positive_samples_weight)
+
+            if args.print_every is not None and epoch % args.print_every == 0:
+                print("Epoch %4d- train_loss:%.3f val_loss:%.3f train_f1:%.3f "
+                      "val_f1:%.3f train_roc_auc:%.3f val_roc_auc:%.3f" %
+                      (epoch, train_loss, val_loss, train_f1, val_f1,
+                       train_roc_auc, val_roc_auc))
+
+        elif args.print_every is not None and epoch % args.print_every == 0:
+            print("Epoch %4d- train_loss:%.3f" % (epoch, train_loss))
 
     # Save trained model
     torch.save(model.state_dict(), args.output_path)
 
 
 if __name__ == '__main__':
-    main()
+    train_and_test()
