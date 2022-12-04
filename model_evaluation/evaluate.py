@@ -14,33 +14,16 @@ from baseline_model import Data
 model_fn = Conv1FC1
 
 
-def eval_model():
+def eval_model(model, test_data_dir, normalized_data=True):
     '''
     Evaluates loss, precision, recall, f1 score, and AUC on test set.
     '''
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--data_dir',
-        default='/home/wongjames/cs230/Project/data_12_2_2022/',
-        help="Path of saved corrosion numpy array")
-    parser.add_argument('--normalized_data',
-                        action='store_true',
-                        help='True to use normalized training data')
-    parser.add_argument(
-        '--model_dir',
-        default='/home/wongjames/cs230/Project/saved_models_12_2_2022/',
-        help="Directory of saved models")
-    parser.add_argument('--model_name',
-                        default='model.pt',
-                        help="Name of saved model.pt")
-
-    args = parser.parse_args()
-
     # Load dataset from saved npy
-    if args.normalized_data:
-        corrosion_path = args.data_dir + 'corrosion_test_normalized.npy'
+    if normalized_data:
+        corrosion_path = test_data_dir + 'corrosion_test_normalized.npy'
     else:
-        corrosion_path = args.data_dir + 'corrosion_test.npy'
+        corrosion_path = test_data_dir + 'corrosion_test.npy'
+
     label_path = args.data_dir + 'labels_test.npy'
     test_data_np = np.load(corrosion_path, allow_pickle=True)
     test_labels_np = np.load(label_path, allow_pickle=False)
@@ -53,11 +36,6 @@ def eval_model():
     # Amount to upweigh the positive samples for loss computation
     positive_samples_weight = 1
 
-    # Load model from saved path
-    saved_model_path = args.model_dir + args.model_name
-    model = model_fn()
-    model.load_state_dict(torch.load(saved_model_path))
-
     loss, precision, recall, f1, roc_auc = validate(
         model=model,
         data_loader=test_dataloader,
@@ -69,4 +47,29 @@ def eval_model():
 
 
 if __name__ == "__main__":
-    eval_model()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--data_dir',
+        default='/home/wongjames/cs230/Project/data_12_2_2022/',
+        help="Path of saved corrosion numpy array")
+    parser.add_argument(
+        '--model_dir',
+        default='/home/wongjames/cs230/Project/saved_models_12_2_2022/',
+        help="Directory of saved models")
+    parser.add_argument('--model_name',
+                        default='model.pt',
+                        help="Name of saved model.pt")
+    parser.add_argument('--normalized_data',
+                        action='store_true',
+                        help='True to use normalized training data')
+
+    args = parser.parse_args()
+
+    # Load model from saved path
+    saved_model_path = args.model_dir + args.model_name
+    model = model_fn()
+    model.load_state_dict(torch.load(saved_model_path))
+
+    eval_model(model,
+               test_data_dir=args.data_dir,
+               normalized_data=args.normalized_data)
