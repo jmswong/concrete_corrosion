@@ -355,9 +355,13 @@ def train_and_test():
     target_data = np.load(label_path, allow_pickle=False)
 
     # Split to 80%/20% train/test sets
-    random_state = 42
-    X_train, X_val, y_train, y_val = train_test_split(
-        corrosion_data, target_data, test_size=0.2, random_state=random_state)
+    if args.validate:
+        random_state = 42
+        X_train, X_val, y_train, y_val = train_test_split(
+            corrosion_data, target_data, test_size=0.2, random_state=random_state)
+    else:
+        X_train = corrosion_data
+        y_train = target_data
 
     # Maybe truncate data
     if args.max_training_data_size < corrosion_data.shape[0]:
