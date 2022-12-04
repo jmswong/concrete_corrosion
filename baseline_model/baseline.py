@@ -297,14 +297,9 @@ def train_and_test():
     '''
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--corrosion_path',
-        default=
-        '/home/wongjames/cs230/Project/data_12_2_2022/corrosion_train_normalized.npy',
+        '--data_dir',
+        default='/home/wongjames/cs230/Project/data_12_2_2022/',
         help="Path of saved corrosion numpy array")
-    parser.add_argument(
-        '--label_path',
-        default='/home/wongjames/cs230/Project/data_12_2_2022/labels_train.npy',
-        help="Path of saved target label numpy array")
     parser.add_argument(
         '--output_path',
         default='/home/wongjames/cs230/Project/models/baseline_model.pt',
@@ -338,12 +333,20 @@ def train_and_test():
         '--validate',
         action='store_true',
         help='True to split dataset and compute validation metrics')
+    parser.add_argument('--normalized_data',
+                        action='store_true',
+                        help='True to use normalized training data')
 
     args = parser.parse_args()
 
     # Load dataset from saved npy
-    corrosion_data = np.load(args.corrosion_path, allow_pickle=True)
-    target_data = np.load(args.label_path, allow_pickle=False)
+    if args.normalized_data:
+        corrosion_path = args.data_dir + 'corrosion_train_normalized.npy'
+    else:
+        corrosion_path = args.data_dir + 'corrosion_train.npy'
+    label_path = args.data_dir + 'labels_train.npy'
+    corrosion_data = np.load(corrosion_path, allow_pickle=True)
+    target_data = np.load(label_path, allow_pickle=False)
 
     # Split to 80%/20% train/test sets
     random_state = 42
