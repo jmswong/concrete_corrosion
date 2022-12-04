@@ -22,6 +22,7 @@ from sklearn.model_selection import train_test_split
 
 sys.path.append('..')
 from data_loader import get_data_loader
+from training_loss_util import weighted_loss
 
 CORROSION_DEPTH_SIZE = 337
 
@@ -104,33 +105,6 @@ class Conv1FC1(nn.Module):
         return torch.sigmoid(x)
 
 
-def compute_weighted_loss(pred, y, loss_fn, pos_weight=1):
-    '''
-    Computes a weighted version of a given binary loss_fn, weighing the
-    positive class by pos_weight (sometimes referred to as alpha).
-
-    weighted_loss = pos_weight * loss if y == 1 else loss
-
-    Args:
-        pred (tensor): Dim (num_samples, 1) tensor of predictions.
-        y (tensor): Dim (num_samples) tensor of true labels.
-        loss_fn (lambda): Binary loss function (e.g. BCELoss).
-        pos_weight: Weight applied to positive samples.
-
-    Returns:
-        avg_loss (tensor): Scalar, average weighted loss.
-    '''
-    y = y.unsqueeze(-1)
-    loss = loss_fn(pred, y)
-
-    # This constructs a weight vector where the element is pos_weight when
-    # y == 1 and 1 otherwise.
-    weights = (y * (pos_weight - 1) + 1)
-
-    avg_loss = torch.sum(loss * weights) / sum(weights)
-    return avg_loss
-
-
 def validate(model, data_loader, positive_samples_weight=1):
     '''
     Validates a given model on a dataset.
@@ -164,8 +138,8 @@ def validate(model, data_loader, positive_samples_weight=1):
         predictions = model(input1, input2)
 
         # compute weighted loss
-        avg_loss = compute_weighted_loss(predictions, y, loss_fn,
-                                         positive_samples_weight)
+        avg_loss = weighted_loss(predictions, y, loss_fn,
+                                 positive_samples_weight)
 
         # compute evaluation metrics on training set
         binary_preds = predictions > 0.5
@@ -232,8 +206,8 @@ def train_epoch(model, data_loader, optimizer, positive_samples_weight=1):
         predictions = model(input1, input2)
 
         # compute weighted loss
-        avg_loss = compute_weighted_loss(predictions, y, loss_fn,
-                                         positive_samples_weight)
+        avg_loss = weighted_loss(predictions, y, loss_fn,
+                                 positive_samples_weight)
 
         # compute evaluation metrics on training set
         binary_preds = predictions > 0.5
