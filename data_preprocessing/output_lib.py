@@ -2,8 +2,9 @@ import argparse
 import glob
 import os.path
 import re
-import scipy.io
 import zipfile
+
+import scipy.io
 
 NUM_TIMESTEPS_PER_SIMULATION = 9
 

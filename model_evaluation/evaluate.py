@@ -1,16 +1,14 @@
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader
-import numpy as np
 import argparse
 import sys
 
-sys.path.append('..')
-from models import Conv1FC1
-from models import train_epoch
-from models import validate
+import numpy as np
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
 
+sys.path.append('..')
 from data_loader import get_data_loader
+from models import Conv1FC1, train_epoch, validate
 from training_loss_util import weighted_loss
 
 model_fn = Conv1FC1

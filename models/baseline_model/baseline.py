@@ -2,23 +2,18 @@
 
 import argparse
 import copy
-import random
-import torch
 import math
+import random
 import sys
 
 import numpy as np
-
+import sklearn
+import torch
 import torch.nn.functional as F
+from sklearn.metrics import accuracy_score, precision_score, recall_score
+from sklearn.model_selection import train_test_split
 from torch import nn
 from torch.utils.data import DataLoader
-
-import sklearn
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import precision_score
-from sklearn.metrics import recall_score
-
-from sklearn.model_selection import train_test_split
 
 sys.path.append('../..')
 from data_loader import get_data_loader

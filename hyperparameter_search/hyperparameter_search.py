@@ -1,26 +1,24 @@
-from ray import tune
-from ray.tune import CLIReporter
-from ray.tune.schedulers import ASHAScheduler, PopulationBasedTraining
-import torch
-import torch.nn as nn
-import numpy as np
-import torch.optim as optim
-from sklearn.model_selection import train_test_split
 import argparse
 import os
 import sys
+
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from ray import tune
+from ray.tune import CLIReporter
+from ray.tune.schedulers import ASHAScheduler, PopulationBasedTraining
+from sklearn.model_selection import train_test_split
 
 # Ray resets PYTHONPATH on distributed runs, so we need to explicitlly set the
 # path here. See https://github.com/ray-project/ray/issues/5635 for details.
 os.environ["PYTHONPATH"] = "/home/wongjames/concrete"
 
 sys.path.append('..')
-from data_loader import get_data_loader
-
 import models
-from models.baseline_model.baseline import Conv1FC1
-from models.baseline_model.baseline import train_epoch
-from models.baseline_model.baseline import validate
+from data_loader import get_data_loader
+from models.baseline_model.baseline import Conv1FC1, train_epoch, validate
 
 model_func = models.baseline_model.baseline.Conv1FC1
 train_epoch_func = models.baseline_model.baseline.train_epoch

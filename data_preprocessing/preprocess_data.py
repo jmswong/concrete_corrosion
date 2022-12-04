@@ -1,8 +1,10 @@
 import argparse
-import corrosion_lib
-import numpy as np
-import output_lib
 import re
+
+import numpy as np
+
+import corrosion_lib
+import output_lib
 
 parser = argparse.ArgumentParser(
     description="Extract and process corrosion and output files")
