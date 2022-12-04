@@ -12,12 +12,14 @@ import argparse
 import os
 import sys
 
+# Ray resets PYTHONPATH on distributed runs, so we need to explicitlly set the
+# path here. See https://github.com/ray-project/ray/issues/5635 for details.
+os.environ["PYTHONPATH"] = "/home/wongjames/concrete"
+
 sys.path.append('..')
 from data_loader import get_data_loader
 
-from baseline import Conv1FC1
-from baseline import train_epoch
-from baseline import validate
+from models.baseline_model.baseline import Conv1FC1, train_epoch, validate
 
 model_func = Conv1FC1
 train_epoch_func = train_epoch
