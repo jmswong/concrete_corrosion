@@ -14,7 +14,7 @@ This executes parallelized random search using RayTune over parameters specified
 Validation loss, precision, recall, f1 score, and AUC metrics are reported for each model.  F1 score is used as the optimization objective.
 
 ## Example Usage
+First you need to modify `os.environ["PYTHONPATH"]` in `hyperparameter_search.py` to point to your repo home directory. This is required as RayTune does not pass env variables downstream to worker jobs.
 ```
-export PYTHONPATH="${PYTHONPATH}:/path/to/model"
 python3 hyperparameter_search.py --num_runs=100 --corrosion_path=/path/to/corrosion.npy --label_path=/path/to/target_labels.npy 
 ```
