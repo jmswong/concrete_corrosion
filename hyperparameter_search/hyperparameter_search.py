@@ -1,5 +1,4 @@
-from config import (MAX_NUM_EPOCHS, GRACE_PERIOD, EPOCHS, CPU, GPU,
-                    DATA_ROOT_DIR, NUM_WORKERS, VALID_SPLIT, SCHEDULER)
+from config import (MAX_NUM_EPOCHS, GRACE_PERIOD, SCHEDULER)
 from ray import tune
 from ray.tune import CLIReporter
 from ray.tune.schedulers import ASHAScheduler, PopulationBasedTraining
@@ -67,6 +66,22 @@ parser.add_argument('--max_weight_decay',
                     type=float,
                     default=1e-2,
                     help="Maximum weight decay for random search")
+parser.add_argument('--validation_size',
+                    type=float,
+                    default=0.2,
+                    help="Fraction of dataset to use for validation")
+parser.add_argument('--cpu',
+                    type=int,
+                    default=8,
+                    help="Number of CPUs requested")
+parser.add_argument('--gpu',
+                    type=int,
+                    default=0,
+                    help="Number of GPUs requested")
+parser.add_argument('--num_epochs',
+                    type=int,
+                    default=3000,
+                    help="Number of epochs to train each model")
 
 args = parser.parse_args()
 
@@ -92,7 +107,7 @@ def get_train_and_val_dataloaders(train_batch_size):
     X_train, X_val, y_train, y_val = train_test_split(
         corrosion_data,
         target_data,
-        test_size=VALID_SPLIT,
+        test_size=args.validation_size,
         random_state=random_state)
 
     # Instantiate training and test(validation) data
@@ -116,7 +131,7 @@ def train_and_validate(config):
     '''
     train_dataloader, val_dataloader = get_train_and_val_dataloaders(
         config["batch_size"])
-    
+
     # Initialize the model.
     model = model_func(kernel_size=config['kernel_size'], stride=1)
 
@@ -142,7 +157,7 @@ def train_and_validate(config):
                                           weight_decay=config['weight_decay'])
 
     # Start the training.
-    for epoch in range(EPOCHS):
+    for epoch in range(args.num_epochs):
         train_loss, train_precision, train_recall, train_f1, train_roc_auc = train_epoch(
             model=model,
             data_loader=train_dataloader,
@@ -216,8 +231,8 @@ def random_search():
     result = tune.run(
         train_and_validate,
         resources_per_trial={
-            "cpu": CPU,
-            "gpu": GPU
+            "cpu": args.CPU,
+            "gpu": args.GPU,
         },
         config=config,
         num_samples=args.num_runs,
