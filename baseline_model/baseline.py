@@ -337,6 +337,11 @@ def train_and_test():
     parser.add_argument('--normalized_data',
                         action='store_true',
                         help='True to use normalized training data')
+    parser.add_argument(
+        '--max_training_data_size',
+        type=int,
+        default=1000000,
+        help="Truncate the training data if it is larger than this")
 
     args = parser.parse_args()
 
@@ -354,8 +359,14 @@ def train_and_test():
     X_train, X_val, y_train, y_val = train_test_split(
         corrosion_data, target_data, test_size=0.2, random_state=random_state)
 
+    # Maybe truncate data
+    if args.max_training_data_size < corrosion_data.shape[0]:
+        X_train = X_train[:args.max_training_data_size]
+        y_train = y_train[:args.max_training_data_size]
+
     # Instantiate training and test(validation) data
     train_data = Data(X_train, y_train)
+
     train_dataloader = DataLoader(dataset=train_data,
                                   batch_size=args.batch_size,
                                   shuffle=True)
