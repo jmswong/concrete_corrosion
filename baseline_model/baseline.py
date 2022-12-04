@@ -58,7 +58,7 @@ class Conv1FC1(nn.Module):
     concrete-property features, and fed into a fully connected layer, with sigmoid
     activation.
     '''
-    def __init__(self, kernel_size=5, stride=1):
+    def __init__(self, kernel_size=16, stride=1):
         super(Conv1FC1, self).__init__()
         # 1 input image channel, 1 output channel, kernel_size x 1 convolution kernel
         self.conv1_output_size = math.floor((CORROSION_DEPTH_SIZE -
@@ -302,7 +302,8 @@ def train_and_test():
         help="Path of saved corrosion numpy array")
     parser.add_argument(
         '--output_path',
-        default='/home/wongjames/cs230/Project/saved_models_12_2_2022/baseline_model.pt',
+        default=
+        '/home/wongjames/cs230/Project/saved_models_12_2_2022/baseline_model.pt',
         help="Path to save trained pytorch model state")
     parser.add_argument(
         '--optimizer',
