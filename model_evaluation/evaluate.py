@@ -6,10 +6,12 @@ import argparse
 import sys
 
 sys.path.append('..')
-from baseline_model import Conv1FC1
-from baseline_model import train_epoch
-from baseline_model import validate
-from baseline_model import Data
+from models import Conv1FC1
+from models import train_epoch
+from models import validate
+
+from data_loader import get_data_loader
+from training_loss_util import weighted_loss
 
 model_fn = Conv1FC1
 
@@ -29,9 +31,9 @@ def eval_model(model, test_data_dir, normalized_data=True):
     test_labels_np = np.load(label_path, allow_pickle=False)
 
     # Create DataLoader
-    test_data = Data(test_data_np, test_labels_np)
-    test_dataloader = DataLoader(dataset=test_data,
-                                 batch_size=test_data_np.shape[0])
+    test_dataloader = get_data_loader(test_data_np,
+                                      test_labels_np,
+                                      batch_size=None)
 
     # Amount to upweigh the positive samples for loss computation
     positive_samples_weight = 1

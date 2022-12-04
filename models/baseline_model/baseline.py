@@ -20,7 +20,7 @@ from sklearn.metrics import recall_score
 
 from sklearn.model_selection import train_test_split
 
-sys.path.append('..')
+sys.path.append('../..')
 from data_loader import get_data_loader
 from training_loss_util import weighted_loss
 
