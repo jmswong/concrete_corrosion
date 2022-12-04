@@ -68,7 +68,7 @@ def eval_model():
         positive_samples_weight=positive_samples_weight)
 
     print("Test_loss:%.3f test_precision:%.3f test_recall:%.3f "
-          "test_f1:%.3d test_auc:%.3f" %
+          "test_f1:%.3f test_auc:%.3f" %
           (loss, precision, recall, f1, roc_auc))
 
 
