@@ -2,11 +2,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 import numpy as np
-#import torch.optim as optim
-#from sklearn.model_selection import train_test_split
 import argparse
-#import os
-
 import sys
 
 sys.path.append('..')
