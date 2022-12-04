@@ -279,7 +279,7 @@ def remap_output_scales(file_and_corrosion_maps, output_maps, verbose=False):
 
         if scaling_factor is not None:
             scaled_corrosion_map = {
-                k: v * scaling_factor
+                k: v / scaling_factor
                 for k, v in corrosion_map.items()
             }
             output.append((file_path, scaled_corrosion_map))
