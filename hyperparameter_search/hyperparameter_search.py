@@ -19,11 +19,14 @@ os.environ["PYTHONPATH"] = "/home/wongjames/concrete"
 sys.path.append('..')
 from data_loader import get_data_loader
 
-from models.baseline_model.baseline import Conv1FC1, train_epoch, validate
+import models
+from models.baseline_model.baseline import Conv1FC1
+from models.baseline_model.baseline import train_epoch
+from models.baseline_model.baseline import validate
 
-model_func = Conv1FC1
-train_epoch_func = train_epoch
-validate_func = validate
+model_func = models.baseline_model.baseline.Conv1FC1
+train_epoch_func = models.baseline_model.baseline.train_epoch
+validate_func = models.baseline_model.baseline.validate
 
 parser = argparse.ArgumentParser()
 
