@@ -302,7 +302,7 @@ def train_and_test():
         help="Path of saved corrosion numpy array")
     parser.add_argument(
         '--output_path',
-        default='/home/wongjames/cs230/Project/saved_models/baseline_model.pt',
+        default='/home/wongjames/cs230/Project/saved_models_12_2_2022/baseline_model.pt',
         help="Path to save trained pytorch model state")
     parser.add_argument(
         '--optimizer',
