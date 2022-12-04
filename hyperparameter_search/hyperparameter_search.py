@@ -13,12 +13,12 @@ import argparse
 import os
 
 # Requires adding model directory to PYTHONPATH
-from baseline import CNN1FC1
+from baseline import Conv1FC1
 from baseline import train_epoch
 from baseline import validate
 from baseline import Data
 
-model_func = CNN1FC1
+model_func = Conv1FC1
 train_epoch_func = train_epoch
 validate_func = validate
 
