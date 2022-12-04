@@ -49,7 +49,7 @@ class Data(Dataset):
         return self.len
 
 
-class CNN1FC1(nn.Module):
+class Conv1FC1(nn.Module):
     '''
     Baseline Convolution + FC model.
     This model runs corrosion depths through a single-layer 1d convolution with
@@ -59,7 +59,7 @@ class CNN1FC1(nn.Module):
     activation.
     '''
     def __init__(self, kernel_size=5, stride=1):
-        super(CNN1FC1, self).__init__()
+        super(Conv1FC1, self).__init__()
         # 1 input image channel, 1 output channel, kernel_size x 1 convolution kernel
         self.conv1_output_size = math.floor((CORROSION_DEPTH_SIZE -
                                              (kernel_size - 1) - 1) / stride +
@@ -366,7 +366,7 @@ def train_and_test():
                                     batch_size=X_val.shape[0],
                                     shuffle=True)
 
-    model = CNN1FC1()
+    model = Conv1FC1()
 
     # Define optimizer
     assert args.optimizer in ["Adam", "RMSprop", "SGD"]
