@@ -32,7 +32,7 @@ class Conv1H1FC2(nn.Module):
                  conv_kernel_sizes=[8],
                  pooling_strides=[8],
                  hidden_layer_sizes=[8],
-                 output_layer_sizes=[128, 1]):
+                 output_layer_sizes=[256, 1]):
         '''
         Args:
             conv_kernel_sizes (list): Kernel sizes for corrosion depths convolution
