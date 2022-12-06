@@ -24,13 +24,9 @@ CORROSION_DEPTH_SIZE = 337
 
 class Conv1H1FC1(nn.Module):
     '''
-
-    Baseline Convolution + FC model.
-    This model runs corrosion depths through a single-layer 1d convolution with
-    one kernel of size kernel_size, followed by ReLU and max-pooling with the same
-    kernel_size and stride. Then the output is concatenated with the 4 continuous
-    concrete-property features, and fed into a fully connected layer, with sigmoid
-    activation.
+    Convolution Layers on corrosion depths: 1
+    Hidden fully connected layers on concrete properties: 1
+    Outut fully connected layers on concatenated features: 1
     '''
     def __init__(self,
                  conv_kernel_sizes=[8],
@@ -102,14 +98,9 @@ class Conv1H1FC1(nn.Module):
         '''
         corrosion_depths = torch.unsqueeze(corrosion_depths, 1)
 
-        # Input: batch x 1 x 337
-        # Output: batch x 1 x 318
+        # Convolution, ReLU, MaxPool
         corrosion_x = self.conv_layers[0](corrosion_depths)
-
         corrosion_x = torch.nn.ReLU()(corrosion_x)
-
-        # Input: (batch x 1 x 318)
-        # Output: (batch x 1 x 19)
         corrosion_x = self.max_pool_layers[0](corrosion_x)
 
         # Flatten to (batch x 19)
@@ -118,12 +109,10 @@ class Conv1H1FC1(nn.Module):
         # Pass concrete features through hidden fc
         concrete_x = self.hidden_fc_layers[0](concrete_features)
 
-        # Concat (batch x 19) with (batch x 4) -> (batch x 23)
+        # Concatenate
         concatenated_x = torch.concat([corrosion_x, concrete_x], dim=1)
 
-        # fully connected layer
-        # Input: (batch x 23)
-        # Output: (batch x 1)
+        # fully connected layers
         x = self.output_fc_layers[0](concatenated_x)
 
         return torch.sigmoid(x)
