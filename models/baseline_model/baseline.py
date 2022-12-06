@@ -31,7 +31,7 @@ class Conv1FC1(nn.Module):
     concrete-property features, and fed into a fully connected layer, with sigmoid
     activation.
     '''
-    def __init__(self, kernel_size=16, stride=1):
+    def __init__(self, kernel_size=8, stride=1):
         super(Conv1FC1, self).__init__()
         # 1 input image channel, 1 output channel, kernel_size x 1 convolution kernel
         self.conv1_output_size = math.floor((CORROSION_DEPTH_SIZE -
@@ -257,7 +257,7 @@ def train_and_test():
         help="Optimization algorithm. One of {'Adam', 'RMSprop', 'SGD'}")
     parser.add_argument('--batch_size',
                         type=int,
-                        default=512,
+                        default=128,
                         help="Batch size to use for training")
     parser.add_argument('--num_epochs',
                         type=int,
@@ -265,11 +265,11 @@ def train_and_test():
                         help="Number of training epochs")
     parser.add_argument('--learning_rate',
                         type=float,
-                        default=0.01,
+                        default=0.013,
                         help="Learning rate")
     parser.add_argument('--weight_decay',
                         type=float,
-                        default=1e-4,
+                        default=0.008,
                         help="Weight decay amount")
     parser.add_argument(
         '--print_every',
