@@ -6,6 +6,43 @@ import zipfile
 NUM_TIMESTEPS_PER_SIMULATION = 9
 
 
+def extract_all_corrosion_output(path, verbose=False):
+    """
+    Unzip and extract all corrosion depth files.
+    Args:
+        path (str): Path to zipped corrosion data.
+        verbose (bool): If true, print detailed debug.
+
+    Returns:
+        simulation_timesteps: List of (simulation index, timestep) pairs.
+    """
+    corrosion_path_lst = path.split('/')
+    corrosion_dir_base = '/'.join(corrosion_path_lst[:-1])
+    corrosion_dir = corrosion_dir_base + "_full"
+
+    simulation_timesteps = []
+
+    with zipfile.ZipFile(path, 'r') as zip_obj:
+        file_names = zip_obj.namelist()
+        for file_name in file_names[:1000]:
+            if "edge" in file_name:
+                continue
+            
+            matches = re.match(r'corrosion/Corrosion_simulation_(\d+)_timeStep_(\d+).txt', file_name)
+            simulation_idx = int(matches.group(1))
+            timestep = int(matches.group(2))
+
+            # skip the first 25 experiments which have a scaling issue
+            if simulation_idx < 25:
+                continue
+            
+            simulation_timesteps.append((simulation_idx, timestep))
+
+            if verbose:
+                print("extracting " + file_name + " to " + corrosion_dir)
+            zip_obj.extract(file_name, corrosion_dir)
+    return simulation_timesteps
+
 def extract_corrosion_output(path,
                              num_simulations=1,
                              simulation_timesteps=None,
