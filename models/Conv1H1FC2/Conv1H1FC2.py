@@ -78,12 +78,12 @@ class Conv1H1FC2(nn.Module):
         # 1 output fully connected layer, single output node
         output_fc1 = nn.Linear(in_features=self.pool1_output_size +
                                hidden_layer_sizes[-1],
-                               out_features=16,
+                               out_features=output_layer_sizes[0],
                                bias=True)
         self.output_fc_layers.append(output_fc1)
 
-        output_fc2 = nn.Linear(16,
-                               out_features=1,
+        output_fc2 = nn.Linear(output_layer_sizes[0],
+                               out_features=output_layer_sizes[1],
                                bias=True)
         self.output_fc_layers.append(output_fc2)
 
