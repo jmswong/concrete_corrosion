@@ -45,7 +45,7 @@ def construct_numpy_output(corrosion_maps):
         # Since we've verified the x-axis evenly distributed and are are all on the
         # same scale, we can drop the points on the x-axis and represent the
         # corrosion depths for a single timestep as a vector in 1d or matrix in 2d.
-        corrosion_depths = list(corrosion_map.values())
+        corrosion_depths = [x * 1e-6 for x in list(corrosion_map.values())]
 
         # Sanity check corrosion depths
         max_corrosion_depth = max(corrosion_depths)
@@ -73,6 +73,7 @@ def preprocess():
     assert corrosion_lib.verify_rebar_locations(corrosion_maps)
 
     output = construct_numpy_output(corrosion_maps)
+
     print("Processed %d unlabeled corrosion depths" % output.shape[0])
 
     # save ndarray to file

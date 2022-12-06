@@ -24,7 +24,7 @@ def extract_all_corrosion_output(path, verbose=False):
 
     with zipfile.ZipFile(path, 'r') as zip_obj:
         file_names = zip_obj.namelist()
-        for file_name in file_names[:1000]:
+        for file_name in file_names:
             if "edge" in file_name:
                 continue
             
