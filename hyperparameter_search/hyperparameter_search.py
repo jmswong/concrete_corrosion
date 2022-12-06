@@ -18,11 +18,11 @@ os.environ["PYTHONPATH"] = "/home/wongjames/concrete"
 sys.path.append('..')
 import models
 from data_loader import get_data_loader
-from models.baseline_model.baseline import Conv1FC1, train_epoch, validate
+from models.Conv1H1FC1 import Conv1H1FC1, train_epoch, validate
 
-model_func = models.baseline_model.baseline.Conv1FC1
-train_epoch_func = models.baseline_model.baseline.train_epoch
-validate_func = models.baseline_model.baseline.validate
+model_func = models.Conv1H1FC1.Conv1H1FC1
+train_epoch_func = models.Conv1H1FC1.train_epoch
+validate_func = models.Conv1H1FC1.validate
 
 parser = argparse.ArgumentParser()
 
@@ -49,19 +49,19 @@ parser.add_argument('--max_batch_size',
                     help="Maximum batch size for random search")
 parser.add_argument('--min_lr',
                     type=float,
-                    default=1e-4,
+                    default=1e-3,
                     help="Minimum Learning rate for random search")
 parser.add_argument('--max_lr',
                     type=float,
-                    default=10,
+                    default=1.0,
                     help="Maximum Learning rate for random search")
 parser.add_argument('--min_weight_decay',
                     type=float,
-                    default=1e-5,
+                    default=0.001,
                     help="Minimum weight decay for random search")
 parser.add_argument('--max_weight_decay',
                     type=float,
-                    default=1e-2,
+                    default=0.1,
                     help="Maximum weight decay for random search")
 parser.add_argument('--validation_size',
                     type=float,
@@ -145,7 +145,10 @@ def train_and_validate(config):
         config["batch_size"])
 
     # Initialize the model.
-    model = model_func(kernel_size=config['kernel_size'], stride=1)
+    model = model_func(conv_kernel_sizes=[config['kernel_size']],
+                       pooling_strides=[config['pooling_stride']],
+                       hidden_layer_sizes=[config['hidden_layer_size']],
+                       output_layer_sizes=[1])
 
     # Define optimizer
     optimizer = config['optimizer']
@@ -213,6 +216,10 @@ def random_search():
         "pos_weight":
         tune.choice([1, 2]),
         "kernel_size":
+        tune.choice([8, 16, 32]),
+        "pooling_stride":
+        tune.choice([4, 8, 16]),
+        "hidden_layer_size":
         tune.choice([8, 16, 32]),
     }
 
