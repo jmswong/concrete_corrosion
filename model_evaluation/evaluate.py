@@ -8,10 +8,10 @@ from torch.utils.data import DataLoader
 
 sys.path.append('..')
 from data_loader import get_data_loader
-from models.Conv2H1FC1 import Conv2H1FC1, train_epoch, validate
+from models.Conv1H1FC1 import Conv1H1FC1, train_epoch, validate
 from training_loss_util import weighted_loss
 
-model_fn = Conv2H1FC1
+model_fn = Conv1H1FC1
 
 
 def eval_model(model, test_data_dir, normalized_data=True):
