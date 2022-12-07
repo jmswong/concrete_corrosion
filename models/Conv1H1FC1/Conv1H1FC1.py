@@ -29,9 +29,9 @@ class Conv1H1FC1(nn.Module):
     Outut fully connected layers on concatenated features: 1
     '''
     def __init__(self,
-                 conv_kernel_sizes=[8],
-                 pooling_strides=[8],
-                 hidden_layer_sizes=[16],
+                 conv_kernel_sizes=[32],
+                 pooling_strides=[4],
+                 hidden_layer_sizes=[8],
                  output_layer_sizes=[1]):
         '''
         Args:
@@ -271,7 +271,7 @@ def train_and_test():
         help="Path to save trained pytorch model state")
     parser.add_argument(
         '--optimizer',
-        default='Adam',
+        default='RMSprop',
         help="Optimization algorithm. One of {'Adam', 'RMSprop', 'SGD'}")
     parser.add_argument('--batch_size',
                         type=int,
@@ -283,11 +283,11 @@ def train_and_test():
                         help="Number of training epochs")
     parser.add_argument('--learning_rate',
                         type=float,
-                        default=0.013,
+                        default=0.0035,
                         help="Learning rate")
     parser.add_argument('--weight_decay',
                         type=float,
-                        default=0.008,
+                        default=0.0134,
                         help="Weight decay amount")
     parser.add_argument(
         '--print_every',
