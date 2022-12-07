@@ -301,6 +301,7 @@ def train_and_test():
     target_data = np.load(label_path, allow_pickle=False)
 
     # Split to 80%/20% train/test sets
+    print("training data pre split ", corrosion_data.shape)
     if args.validate:
         random_state = 42
         X_train, X_val, y_train, y_val = train_test_split(
@@ -312,6 +313,7 @@ def train_and_test():
         X_train = corrosion_data
         y_train = target_data
 
+    print("training data post split ", X_train.shape)
     # Maybe truncate data
     if args.max_training_data_size < corrosion_data.shape[0]:
         X_train = X_train[:args.max_training_data_size]
@@ -371,7 +373,7 @@ def train_and_test():
                        train_roc_auc, val_roc_auc))
 
         elif args.print_every is not None and epoch % args.print_every == 0:
-            print("Epoch %4d- train_loss:%.3f" % (epoch, train_loss))
+            print("Epoch %4d- train_loss:%.3f train_f1:%.3f" % (epoch, train_loss, train_f1))
 
     # Save trained model
     torch.save(model.state_dict(), args.output_path)
