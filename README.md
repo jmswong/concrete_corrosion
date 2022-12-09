@@ -9,16 +9,17 @@ These models predict corrosion-induced cracking using PyTorch. The models takes 
 - torch==1.13.0
 
 # Contents
-`data_analysis/`: Notebook for analyzing corrosion and concrete input features.
-`data_augmentation/`: Generates augmented training data by flipping, adding noise, and monotonic scaling.
-`data_generation/`: FEM simulation for generating data.
-`data_loader/`: Helper functions for loading datasets.
-`data_normalization/`: Custom normalization for corrosion depth features.
-`hyperparameter_search/`: RayTune for random hyperparameter search.
-`model_evaluation/`: Helper function for evaluating trained models on test set. Also contains a notebook for more detailed evaluation metrics and plots.
-`models/`: Directory containing several model architecture configurations.
-`sample_data_11_09_2022/`: Sample corrosion patterns from COMSOL.
-`training_loss_util/`: Helper function for computing loss.
+- `models/`: Directory containing several model architecture configurations.
+- `data_generation/`: FEM simulation for generating data.
+- `data_analysis/`: Notebook for analyzing corrosion and concrete input features.
+- `data_preprocessing/`: Extracts, processes, and joins data from simulations.
+- `data_normalization/`: Custom normalization for corrosion depth features.
+- `hyperparameter_search/`: RayTune for random hyperparameter search.
+- `model_evaluation/`: Helper function for evaluating trained models on test set. Also contains a notebook for more detailed evaluation metrics and plots.
+- `data_augmentation/`: Generates augmented training data by flipping, adding noise, and monotonic scaling.
+- `sample_data_11_09_2022/`: Sample corrosion patterns from COMSOL.
+- `training_loss_util/`: Helper function for computing loss.
+- `data_loader/`: Helper functions for loading datasets.
 
 # Usage
 1. Generate zipped corrosion data.
