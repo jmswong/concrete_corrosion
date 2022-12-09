@@ -2,11 +2,11 @@
 These models predict corrosion-induced cracking using PyTorch. The models takes in corrosion patterns and concrete material properties and outputs whether there is a crack on the concrete’s surface.
 
 # Dependencies
-numpy==1.21.5
-ray==2.1.0
-scikit_learn==1.2.0
-scipy==1.9.1
-torch==1.13.0
+- numpy==1.21.5
+- ray==2.1.0
+- scikit_learn==1.2.0
+- scipy==1.9.1
+- torch==1.13.0
 
 # Contents
 `data_analysis/`: Notebook for analyzing corrosion and concrete input features.
